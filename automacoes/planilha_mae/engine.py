@@ -9,6 +9,7 @@ Consolida planilhas diárias, identifica inconformidades, aplica cores por statu
 import copy
 import re
 import shutil
+import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
@@ -255,10 +256,30 @@ def format_arrival(value):
     if hasattr(value, 'hour') and hasattr(value, 'minute'):
         return f'Chegou às {value.hour:02d}h{value.minute:02d}'
     if isinstance(value, str):
-        match = re.search(r'(?<!\d)([01]?\d|2[0-3])[:h]([0-5]\d)(?!\d)', value)
+        match = re.search(
+            r'(?<!\d)([01]?\d|2[0-3])\s*(?::|h|horas?\s+e)\s*([0-5]?\d)(?!\d)',
+            plain(value),
+        )
         if match:
-            return f'Chegou às {int(match.group(1)):02d}h{match.group(2)}'
+            return f'Chegou às {int(match.group(1)):02d}h{int(match.group(2)):02d}'
     return None
+
+
+def compose_information(existing=None, arrival=None, *reasons):
+    """Padroniza o horário e reúne os motivos sem repetir informações."""
+    parts=[]
+    standardized_arrival = format_arrival(arrival) or format_arrival(existing)
+    if standardized_arrival:
+        parts.append(standardized_arrival)
+    elif existing not in (None, ''):
+        parts.append(str(existing).strip())
+    for reason in reasons:
+        if reason in (None, ''):
+            continue
+        text = str(reason).strip()
+        if text and plain(text) not in {plain(part) for part in parts}:
+            parts.append(text)
+    return ' | '.join(parts) if parts else None
 
 
 def official_category(value):
@@ -315,7 +336,11 @@ def monthly_inconformities(monthly_records, report):
         if not category and 'aguardando' in plain(rec.get('etapa visita')):
             category = 'Não finalizado no dia'
         if category:
-            rec = rec.copy(); rec['observacoes'] = category
+            rec = rec.copy()
+            rec['observacoes'] = category
+            rec['informacoes'] = compose_information(
+                rec.get('informacoes'), None, reason
+            )
             records.append(rec)
         elif reason not in (None, ''):
             report.append(f'MOTIVO NÃO MAPEADO no relatório final: {reason!r} (ID {rec.get("_id", "")}).')
@@ -413,8 +438,38 @@ def create_native_pivot(path, report, progress=None):
         excel=win32com.client.DispatchEx('Excel.Application')
         excel.Visible=False
         excel.DisplayAlerts=False
-        book=excel.Workbooks.Open(str(Path(path).resolve()))
-        source_ws=book.Worksheets('Inconformidades')
+        workbook_path=Path(path).resolve()
+        if not workbook_path.is_file() or workbook_path.stat().st_size == 0:
+            raise FileNotFoundError(f'Arquivo de destino inválido: {workbook_path}')
+        open_error=None
+        for attempt in range(3):
+            try:
+                book=excel.Workbooks.Open(
+                    str(workbook_path), UpdateLinks=0, ReadOnly=False,
+                    IgnoreReadOnlyRecommended=True, Notify=False,
+                    AddToMru=False, Local=True,
+                )
+                break
+            except Exception as exc:
+                open_error=exc
+                if attempt < 2:
+                    time.sleep(1.5)
+        if book is None:
+            raise RuntimeError(
+                'O Excel não conseguiu abrir o arquivo após 3 tentativas. '
+                'Feche a Planilha Mãe no Excel, aguarde a sincronização do OneDrive '
+                f'e tente novamente. Detalhe: {open_error}'
+            )
+        source_ws=None
+        for sheet_index in range(1, book.Worksheets.Count + 1):
+            candidate=book.Worksheets(sheet_index)
+            if plain(candidate.Name) == 'inconformidades':
+                source_ws=candidate
+                break
+        if source_ws is None:
+            raise RuntimeError('A aba Inconformidades não foi encontrada no arquivo.')
+        if source_ws.Name != 'Inconformidades':
+            source_ws.Name='Inconformidades'
 
         xl_up=-4162; xl_to_left=-4159; xl_src_range=1; xl_yes=1
         xl_database=1; xl_row_field=1; xl_count=-4112
@@ -432,10 +487,10 @@ def create_native_pivot(path, report, progress=None):
         table.TableStyle='TableStyleMedium2'
 
         # Recria somente o Painel; as demais abas e dados permanecem intactos.
-        try:
-            book.Worksheets('Painel').Delete()
-        except Exception:
-            pass
+        for sheet_index in range(book.Worksheets.Count, 0, -1):
+            candidate=book.Worksheets(sheet_index)
+            if plain(candidate.Name) == 'painel':
+                candidate.Delete()
         panel=book.Worksheets.Add(After=book.Worksheets(book.Worksheets.Count))
         panel.Name='Painel'
         # Algumas versões do Excel ignoram a posição informada ao adicionar a aba.
@@ -588,10 +643,14 @@ def write_day_sheet(ws, records):
     fit_columns(ws)
 
 
-def rebuild_inconformities(wb, final_records=None, final_all_records=None, report=None):
+def rebuild_inconformities(wb, final_records=None, final_all_records=None,
+                           report=None, daily_source_records=None):
     """Une o relatório mensal final aos dois tipos de atraso anotados no dia."""
     report = report if report is not None else []
     final_index = {final_visit_key(rec): rec for rec in final_all_records or []}
+    daily_source_index = {
+        final_visit_key(rec): rec for rec in daily_source_records or []
+    }
     existing_name = next((n for n in wb.sheetnames if plain(n) == 'inconformidades'), None)
     if existing_name:
         ws=wb[existing_name]
@@ -621,6 +680,8 @@ def rebuild_inconformities(wb, final_records=None, final_all_records=None, repor
             category=official_category(values.get('observacoes'))
             if category not in DAILY_DELAY_CATEGORIES: continue
             values['_id']=str(values.get('id contrato','')).strip()
+            source_rec = daily_source_index.get(final_visit_key(values), {})
+            daily_reason = source_rec.get('motivo cancelamento')
             final_rec = final_index.get(final_visit_key(values))
             if final_rec:
                 # Somente a cópia enviada para Inconformidades recebe o estado
@@ -633,15 +694,21 @@ def rebuild_inconformities(wb, final_records=None, final_all_records=None, repor
                     final_status = final_rec.get('status') or final_rec.get('etapa visita')
                     if final_status not in (None, ''):
                         values['status'] = final_status
-                arrival = format_arrival(final_rec.get('data visita inicio'))
-                if arrival:
-                    values['informacoes'] = arrival
-                else:
+                arrival_value = final_rec.get('data visita inicio')
+                arrival = format_arrival(arrival_value)
+                values['informacoes'] = compose_information(
+                    values.get('informacoes'), arrival_value,
+                    daily_reason, final_rec.get('motivo cancelamento')
+                )
+                if not arrival:
                     report.append(
                         f'HORÁRIO DE CHEGADA NÃO ENCONTRADO no relatório final '
                         f'(ID {values.get("_id", "")}, aba {day_ws.title}).'
                     )
             else:
+                values['informacoes'] = compose_information(
+                    values.get('informacoes'), None, daily_reason
+                )
                 report.append(
                     f'VISITA ATRASADA NÃO ENCONTRADA no relatório final '
                     f'(ID {values.get("_id", "")}, aba {day_ws.title}).'
@@ -737,7 +804,10 @@ def create_new_mother(daily_paths, final_path, output, year, month, report, prog
         write_day_sheet(ws,[])
         report.append('Nenhuma planilha diária válida foi importada.')
     if progress: progress(72, 'Identificando e montando Inconformidades...')
-    rebuild_inconformities(wb, final_records, final_all_records, report)
+    daily_source_records=[rec for records in by_day.values() for rec in records.values()]
+    rebuild_inconformities(
+        wb, final_records, final_all_records, report, daily_source_records
+    )
     if progress: progress(86, 'Montando Painel e contagens...')
     rebuild_panel(wb)
     order_workbook_sheets(wb)
@@ -805,7 +875,10 @@ def merge_into_existing(wb, daily_paths, final_path, year, month, report, progre
     for day_ws in wb.worksheets:
         if norm(day_ws.title) not in SPECIAL_SHEETS and find_header_row(day_ws):
             apply_table_borders(day_ws)
-    rebuild_inconformities(wb, final_records, final_all_records, report)
+    daily_source_records=[rec for records in by_day.values() for rec in records.values()]
+    rebuild_inconformities(
+        wb, final_records, final_all_records, report, daily_source_records
+    )
     if progress: progress(86, 'Montando Painel e contagens...')
     rebuild_panel(wb)
     order_workbook_sheets(wb)
