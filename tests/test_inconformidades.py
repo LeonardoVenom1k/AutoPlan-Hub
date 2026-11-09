@@ -72,9 +72,80 @@ class InconformidadesTests(unittest.TestCase):
         self.assertEqual(inconformidades['H2'].value, 'Atrasado - Técnico não informou')
         self.assertEqual(
             inconformidades['I2'].value,
-            'Chegou às 08h26 | Equipe avisou a central | Veículo liberado após contato',
+            'Veículo liberado após contato',
         )
         self.assertEqual(report, [])
+
+    def test_localiza_resultado_com_horario_e_tecnico_diferentes(self):
+        source = {
+            '_id': '1748520',
+            'data inicio': datetime(2026, 10, 13, 9, 30),
+            'placa': 'RTZ5B69',
+            'tipo visita': 'Manutenção',
+            'tecnico': 'Equipe agendada',
+        }
+        final = {
+            '_id': '1748520',
+            'data inicio': datetime(2026, 10, 13, 9, 0),
+            'placa': 'RTZ5B69',
+            'tipo visita': 'Manutenção',
+            'tecnico': 'Diogo de Paula - Jundsar',
+            'etapa visita': 'Concluído',
+        }
+        self.assertIs(engine.find_final_record(source, [final]), final)
+
+    def test_localiza_mesma_visita_entre_planilhas_dos_colegas(self):
+        morning = {
+            '_id': '12345', '_file': '26-10 MANHÃ.xlsx',
+            'data inicio': datetime(2026, 10, 26, 8, 0),
+            'placa': 'ABC1D23', 'tipo visita': 'Manutenção',
+            'tecnico': 'Equipe inicial', 'etapa visita': 'Agendada',
+        }
+        afternoon = {
+            '_id': '12345', '_file': '26-10 TARDE.xlsx',
+            'data inicio': datetime(2026, 10, 26, 10, 30),
+            'placa': 'ABC1D23', 'tipo visita': 'Manutenção',
+            'tecnico': 'Equipe substituta', 'etapa visita': 'Concluído',
+        }
+        records = {engine.visit_key(morning): morning}
+        self.assertEqual(
+            engine.find_similar_visit_key(records, afternoon),
+            engine.visit_key(morning),
+        )
+        report = []
+        engine.merge_record(morning, afternoon, report, 26, '12345')
+        self.assertEqual(morning['data inicio'], datetime(2026, 10, 26, 10, 30))
+        self.assertEqual(morning['tecnico'], 'Equipe substituta')
+        self.assertEqual(morning['etapa visita'], 'Concluído')
+
+    def test_nao_mistura_duas_visitas_distantes_no_mesmo_dia(self):
+        morning = {
+            '_id': '12345', 'data inicio': datetime(2026, 10, 26, 9, 0),
+            'placa': 'ABC1D23', 'tipo visita': 'Manutenção',
+        }
+        afternoon = {
+            '_id': '12345', 'data inicio': datetime(2026, 10, 26, 16, 0),
+            'placa': 'ABC1D23', 'tipo visita': 'Manutenção',
+        }
+        self.assertIsNone(engine.find_final_record(afternoon, [morning]))
+
+    def test_motivo_tem_prioridade_sobre_horario(self):
+        self.assertEqual(
+            engine.compose_information(
+                'Chegou às 09h23', datetime(2026, 10, 13, 9, 23),
+                'Cancelado pela Maxtrack',
+            ),
+            'Cancelado pela Maxtrack',
+        )
+
+    def test_formata_colunas_de_data_e_hora(self):
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(engine.STANDARD_HEADERS)
+        sheet.append([None] * 9 + [datetime(2026, 10, 13, 9, 30)])
+        engine.format_datetime_columns(sheet)
+        self.assertEqual(sheet['J2'].number_format, 'dd/mm/yyyy hh:mm')
+        self.assertGreaterEqual(sheet.column_dimensions['J'].width, 19)
 
 
 if __name__ == '__main__':

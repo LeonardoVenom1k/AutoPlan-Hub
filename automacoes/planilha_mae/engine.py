@@ -266,20 +266,68 @@ def format_arrival(value):
 
 
 def compose_information(existing=None, arrival=None, *reasons):
-    """Padroniza o horário e reúne os motivos sem repetir informações."""
-    parts=[]
-    standardized_arrival = format_arrival(arrival) or format_arrival(existing)
-    if standardized_arrival:
-        parts.append(standardized_arrival)
-    elif existing not in (None, ''):
-        parts.append(str(existing).strip())
+    """Usa o motivo como prioridade; sem motivo, padroniza o horário."""
+    reason_parts=[]
     for reason in reasons:
         if reason in (None, ''):
             continue
         text = str(reason).strip()
-        if text and plain(text) not in {plain(part) for part in parts}:
-            parts.append(text)
-    return ' | '.join(parts) if parts else None
+        if text and plain(text) not in {plain(part) for part in reason_parts}:
+            reason_parts.append(text)
+    if reason_parts:
+        return ' | '.join(reason_parts)
+
+    standardized_arrival = format_arrival(arrival) or format_arrival(existing)
+    if standardized_arrival:
+        return standardized_arrival
+    return str(existing).strip() if existing not in (None, '') else None
+
+
+def find_final_record(source, final_records):
+    """Encontra a mesma visita mesmo com troca de técnico ou ajuste de horário."""
+    source_id = plain(source.get('_id') or source.get('id contrato'))
+    source_start = source.get('data inicio')
+    if not source_id:
+        return None
+
+    candidates=[]
+    for candidate in final_records:
+        candidate_id = plain(candidate.get('_id') or candidate.get('id contrato'))
+        if candidate_id != source_id:
+            continue
+        candidate_start = candidate.get('data inicio')
+        if isinstance(source_start, datetime) and isinstance(candidate_start, datetime):
+            if source_start.date() != candidate_start.date():
+                continue
+            time_distance = abs((candidate_start - source_start).total_seconds()) / 60
+            # O mesmo contrato pode ter mais de uma visita no mesmo dia. Aceita
+            # remarcações de horário, mas não mistura turnos muito distantes.
+            if time_distance > 240:
+                continue
+        else:
+            time_distance = 0
+
+        score = 1000 - min(time_distance, 999)
+        source_plate, candidate_plate = plain(source.get('placa')), plain(candidate.get('placa'))
+        source_type, candidate_type = plain(source.get('tipo visita')), plain(candidate.get('tipo visita'))
+        if source_plate and source_plate == candidate_plate:
+            score += 200
+        if source_type and source_type == candidate_type:
+            score += 100
+        candidates.append((score, candidate))
+
+    return max(candidates, key=lambda item: item[0])[1] if candidates else None
+
+
+def find_similar_visit_key(records, incoming):
+    """Localiza a mesma visita entre arquivos diários com dados atualizados."""
+    exact_key = visit_key(incoming)
+    if exact_key in records:
+        return exact_key
+    matched = find_final_record(incoming, records.values())
+    if matched is None:
+        return None
+    return next((key for key,value in records.items() if value is matched), None)
 
 
 def official_category(value):
@@ -402,6 +450,20 @@ def fit_columns(ws, max_width=36):
             v=ws.cell(r,c).value
             if v is not None: longest=max(longest,len(str(v)))
         ws.column_dimensions[letter].width=min(max_width,max(12,longest+2))
+
+
+def format_datetime_columns(ws, header_row=1):
+    """Aplica o padrão visual DD/MM/AAAA HH:MM às colunas de data e hora."""
+    headers=visible_headers(ws,header_row)
+    date_headers={'data inicio','data fim','data visita inicio','data visita fim'}
+    for header,column in headers.items():
+        if header not in date_headers:
+            continue
+        ws.column_dimensions[get_column_letter(column)].width=max(
+            ws.column_dimensions[get_column_letter(column)].width or 0, 19
+        )
+        for row in range(header_row+1,ws.max_row+1):
+            ws.cell(row,column).number_format='dd/mm/yyyy hh:mm'
 
 
 def order_workbook_sheets(wb):
@@ -622,8 +684,8 @@ def merge_daily_records(paths, year, month, report):
         day_records=by_day.setdefault(d.day,{})
         for _,_,_,records in candidates:
             for rec in records:
-                rid=rec['_id']; key=visit_key(rec)
-                if key not in day_records: day_records[key]=rec.copy()
+                rid=rec['_id']; key=find_similar_visit_key(day_records,rec)
+                if key is None: day_records[visit_key(rec)]=rec.copy()
                 else:
                     merge_record(day_records[key], rec, report, d.day, rid)
     return by_day
@@ -641,6 +703,7 @@ def write_day_sheet(ws, records):
         apply_day_row_style(ws, ws.max_row, rec)
     apply_table_borders(ws)
     fit_columns(ws)
+    format_datetime_columns(ws)
 
 
 def rebuild_inconformities(wb, final_records=None, final_all_records=None,
@@ -683,6 +746,8 @@ def rebuild_inconformities(wb, final_records=None, final_all_records=None,
             source_rec = daily_source_index.get(final_visit_key(values), {})
             daily_reason = source_rec.get('motivo cancelamento')
             final_rec = final_index.get(final_visit_key(values))
+            if final_rec is None:
+                final_rec = find_final_record(values, final_all_records or [])
             if final_rec:
                 # Somente a cópia enviada para Inconformidades recebe o estado
                 # final; a linha original da aba diária permanece intocada.
@@ -698,7 +763,7 @@ def rebuild_inconformities(wb, final_records=None, final_all_records=None,
                 arrival = format_arrival(arrival_value)
                 values['informacoes'] = compose_information(
                     values.get('informacoes'), arrival_value,
-                    daily_reason, final_rec.get('motivo cancelamento')
+                    final_rec.get('motivo cancelamento') or daily_reason
                 )
                 if not arrival:
                     report.append(
@@ -726,6 +791,7 @@ def rebuild_inconformities(wb, final_records=None, final_all_records=None,
             cell.font = Font(name='Calibri', size=11, color='000000')
     apply_table_borders(ws)
     fit_columns(ws)
+    format_datetime_columns(ws)
 
 
 def canonical_text(value):
