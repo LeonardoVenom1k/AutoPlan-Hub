@@ -4,7 +4,7 @@
 
 Central local de automações para rotinas operacionais.
 
-**Versão:** 0.1.0  
+**Versão:** 0.2.0  
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automação disponível
@@ -15,6 +15,8 @@ Central local de automações para rotinas operacionais.
 - Compara atualizações da manhã e da tarde.
 - Importa o relatório final de inconformidades.
 - Atualiza a aba de inconformidades.
+- Nas inconformidades de atraso, substitui o estado Agendada pelo resultado do relatório final.
+- Registra o horário real no formato `Chegou às 12h35`, sem alterar as abas diárias.
 - Cria um Painel com Tabela Dinâmica nativa do Excel.
 - Permite abrir os detalhes das contagens com duplo clique.
 - Cria backup antes de atualizar uma Planilha Mãe existente.
