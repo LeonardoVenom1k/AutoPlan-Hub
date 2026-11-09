@@ -226,6 +226,41 @@ def visit_key(rec):
     )
 
 
+def final_visit_key(rec):
+    """Relaciona a visita diária com o relatório final.
+
+    O técnico não faz parte desta chave porque o nome/equipe pode ser corrigido
+    entre o agendamento e a finalização da visita.
+    """
+    def value(*names):
+        for name in names:
+            current = rec.get(name)
+            if current not in (None, ''):
+                if isinstance(current, datetime):
+                    return current.strftime('%Y-%m-%d %H:%M:%S')
+                return plain(current)
+        return ''
+    return (
+        value('_id', 'id contrato'),
+        value('data inicio'),
+        value('placa'),
+        value('tipo visita'),
+    )
+
+
+def format_arrival(value):
+    """Formata o horário real no padrão usado na aba Inconformidades."""
+    if isinstance(value, datetime):
+        return f'Chegou às {value:%H}h{value:%M}'
+    if hasattr(value, 'hour') and hasattr(value, 'minute'):
+        return f'Chegou às {value.hour:02d}h{value.minute:02d}'
+    if isinstance(value, str):
+        match = re.search(r'(?<!\d)([01]?\d|2[0-3])[:h]([0-5]\d)(?!\d)', value)
+        if match:
+            return f'Chegou às {int(match.group(1)):02d}h{match.group(2)}'
+    return None
+
+
 def official_category(value):
     """Converte os motivos do relatório baixado para as 21 categorias oficiais."""
     key = plain(value)
@@ -268,6 +303,27 @@ def official_category(value):
 
 
 def read_monthly_inconformities(path, year, month, report):
+    return monthly_inconformities(read_monthly_records(path, year, month), report)
+
+
+def monthly_inconformities(monthly_records, report):
+    """Seleciona e classifica as inconformidades do relatório final já lido."""
+    records=[]
+    for rec in monthly_records:
+        reason = rec.get('motivo cancelamento')
+        category = official_category(reason)
+        if not category and 'aguardando' in plain(rec.get('etapa visita')):
+            category = 'Não finalizado no dia'
+        if category:
+            rec = rec.copy(); rec['observacoes'] = category
+            records.append(rec)
+        elif reason not in (None, ''):
+            report.append(f'MOTIVO NÃO MAPEADO no relatório final: {reason!r} (ID {rec.get("_id", "")}).')
+    return records
+
+
+def read_monthly_records(path, year, month):
+    """Lê todos os registros do relatório final dentro do período selecionado."""
     records=[]
     if not path: return records
     for _,_,_,rows in read_daily(path):
@@ -275,15 +331,7 @@ def read_monthly_inconformities(path, year, month, report):
             start = rec.get('data inicio')
             if isinstance(start, datetime) and (start.year, start.month) != (year, month):
                 continue
-            reason = rec.get('motivo cancelamento')
-            category = official_category(reason)
-            if not category and 'aguardando' in plain(rec.get('etapa visita')):
-                category = 'Não finalizado no dia'
-            if category:
-                rec = rec.copy(); rec['observacoes'] = category
-                records.append(rec)
-            elif reason not in (None, ''):
-                report.append(f'MOTIVO NÃO MAPEADO no relatório final: {reason!r} (ID {rec.get("_id", "")}).')
+            records.append(rec)
     return records
 
 
@@ -540,8 +588,10 @@ def write_day_sheet(ws, records):
     fit_columns(ws)
 
 
-def rebuild_inconformities(wb, final_records=None):
+def rebuild_inconformities(wb, final_records=None, final_all_records=None, report=None):
     """Une o relatório mensal final aos dois tipos de atraso anotados no dia."""
+    report = report if report is not None else []
+    final_index = {final_visit_key(rec): rec for rec in final_all_records or []}
     existing_name = next((n for n in wb.sheetnames if plain(n) == 'inconformidades'), None)
     if existing_name:
         ws=wb[existing_name]
@@ -571,6 +621,31 @@ def rebuild_inconformities(wb, final_records=None):
             category=official_category(values.get('observacoes'))
             if category not in DAILY_DELAY_CATEGORIES: continue
             values['_id']=str(values.get('id contrato','')).strip()
+            final_rec = final_index.get(final_visit_key(values))
+            if final_rec:
+                # Somente a cópia enviada para Inconformidades recebe o estado
+                # final; a linha original da aba diária permanece intocada.
+                if 'agendad' in plain(values.get('etapa visita')):
+                    final_stage = final_rec.get('etapa visita') or final_rec.get('status')
+                    if final_stage not in (None, ''):
+                        values['etapa visita'] = final_stage
+                if 'agendad' in plain(values.get('status')):
+                    final_status = final_rec.get('status') or final_rec.get('etapa visita')
+                    if final_status not in (None, ''):
+                        values['status'] = final_status
+                arrival = format_arrival(final_rec.get('data visita inicio'))
+                if arrival:
+                    values['informacoes'] = arrival
+                else:
+                    report.append(
+                        f'HORÁRIO DE CHEGADA NÃO ENCONTRADO no relatório final '
+                        f'(ID {values.get("_id", "")}, aba {day_ws.title}).'
+                    )
+            else:
+                report.append(
+                    f'VISITA ATRASADA NÃO ENCONTRADA no relatório final '
+                    f'(ID {values.get("_id", "")}, aba {day_ws.title}).'
+                )
             key=(visit_key(values), plain(category))
             if key not in seen:
                 seen.add(key); values['observacoes']=category; combined.append(values)
@@ -650,7 +725,8 @@ def create_new_mother(daily_paths, final_path, output, year, month, report, prog
     if progress: progress(10, 'Lendo e comparando planilhas diárias...')
     wb=Workbook(); wb.remove(wb.active)
     by_day=merge_daily_records(daily_paths,year,month,report)
-    final_records=read_monthly_inconformities(final_path,year,month,report)
+    final_all_records=read_monthly_records(final_path,year,month)
+    final_records=monthly_inconformities(final_all_records,report)
     days=sorted(by_day)
     for idx, day in enumerate(days, start=1):
         ws=wb.create_sheet(f'{day:02d}-{month:02d}-{year}')
@@ -661,7 +737,7 @@ def create_new_mother(daily_paths, final_path, output, year, month, report, prog
         write_day_sheet(ws,[])
         report.append('Nenhuma planilha diária válida foi importada.')
     if progress: progress(72, 'Identificando e montando Inconformidades...')
-    rebuild_inconformities(wb, final_records)
+    rebuild_inconformities(wb, final_records, final_all_records, report)
     if progress: progress(86, 'Montando Painel e contagens...')
     rebuild_panel(wb)
     order_workbook_sheets(wb)
@@ -672,7 +748,8 @@ def create_new_mother(daily_paths, final_path, output, year, month, report, prog
 def merge_into_existing(wb, daily_paths, final_path, year, month, report, progress=None):
     if progress: progress(10, 'Lendo e comparando planilhas diárias...')
     by_day=merge_daily_records(daily_paths,year,month,report)
-    final_records=read_monthly_inconformities(final_path,year,month,report)
+    final_all_records=read_monthly_records(final_path,year,month)
+    final_records=monthly_inconformities(final_all_records,report)
     added=0
     day_items=list(by_day.items())
     for day_index, (day,records) in enumerate(day_items, start=1):
@@ -728,7 +805,7 @@ def merge_into_existing(wb, daily_paths, final_path, year, month, report, progre
     for day_ws in wb.worksheets:
         if norm(day_ws.title) not in SPECIAL_SHEETS and find_header_row(day_ws):
             apply_table_borders(day_ws)
-    rebuild_inconformities(wb, final_records)
+    rebuild_inconformities(wb, final_records, final_all_records, report)
     if progress: progress(86, 'Montando Painel e contagens...')
     rebuild_panel(wb)
     order_workbook_sheets(wb)

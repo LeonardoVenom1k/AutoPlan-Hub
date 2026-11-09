@@ -95,7 +95,7 @@ class ConsolidatorWindow(tk.Tk):
         self.files_list.pack(side='left',fill='both',expand=True)
         scrollbar.pack(side='right',fill='y')
 
-        ttk.Label(source_card,text='Relatório final do mês',style='Card.TLabel').grid(row=3,column=0,sticky='w')
+        ttk.Label(source_card,text='Relatório final do mês (resultado e horários)',style='Card.TLabel').grid(row=3,column=0,sticky='w')
         ttk.Entry(source_card,textvariable=self.final_file).grid(row=4,column=0,columnspan=2,sticky='ew',padx=(0,8),pady=(5,0))
         ttk.Button(source_card,text='Selecionar relatório',command=self._pick_final).grid(row=4,column=2,pady=(5,0))
 

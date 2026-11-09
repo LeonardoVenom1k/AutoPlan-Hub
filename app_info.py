@@ -3,7 +3,7 @@ from pathlib import Path
 import tkinter as tk
 
 APP_NAME = 'AutoPlan Hub'
-APP_VERSION = '0.1.0'
+APP_VERSION = '0.2.0'
 APP_AUTHOR = 'Leonardo Aguiar'
 APP_ROOT = Path(__file__).resolve().parent
 ICON_PNG = APP_ROOT / 'assets' / 'autoplan-hub-icon.png'
