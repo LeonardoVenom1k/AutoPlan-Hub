@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/
+
+# Arquivos operacionais e dados reais
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+*.tsv
+*_relatorio.txt
+*_backup_*
+outputs/
+dados/
+testes_reais/
+
+# Arquivos temporários
+~$*
+*.tmp
+*.log
+
