@@ -214,7 +214,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.2.1').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.2.2').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -256,8 +256,8 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.2.1'),
-        ('Versão do documento', '1.2'),
+        ('Versão do software', '0.2.2'),
+        ('Versão do documento', '1.3'),
         ('Responsável', 'Leonardo Aguiar'),
         ('Data de emissão', '9 de novembro de 2026'),
     ]
@@ -279,7 +279,7 @@ def build():
 
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório privado.')
-    add_body(doc, 'A versão 0.2.1 amplia a confiabilidade do Consolidador de Planilha Mãe. O módulo padroniza os horários, leva os motivos para Informações, aceita variações nos nomes das abas e repete a abertura do Excel quando existe um bloqueio temporário.')
+    add_body(doc, 'A versão 0.2.2 melhora a comparação entre planilhas diárias e o relatório final. Mudanças de horário, técnico ou prestador não impedem a localização da visita. Quando existe motivo, Informações mantém somente o motivo; datas e horários seguem o padrão DD/MM/AAAA HH:MM.')
 
     add_heading(doc, 'Conteúdo do documento', 2)
     contents = [
@@ -301,7 +301,7 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.2.1', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.2.2', 2)
     add_bullets(doc, [
         'Menu principal com acesso às automações disponíveis.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
@@ -311,6 +311,8 @@ def build():
         'Atualização do resultado final e do horário de chegada das visitas atrasadas somente em Inconformidades.',
         'Motivos das fontes final e diária registrados no campo Informações.',
         'Tratamento de espaços nos nomes das abas e novas tentativas de abertura no Excel.',
+        'Comparação tolerante a ajustes de horário e troca de técnico ou prestador.',
+        'Prioridade do motivo sobre a mensagem de chegada e datas no padrão DD/MM/AAAA HH:MM.',
         'Geração de Painel por Tabela Dinâmica com filtro e detalhamento por duplo clique.',
         'Backup automático antes da atualização de um arquivo existente.',
         'Processamento em segundo plano para manter a interface responsiva.',
@@ -397,7 +399,7 @@ def build():
     add_heading(doc, '5.1 Identificação de datas e colunas', 2)
     add_body(doc, 'O motor aceita nomes de arquivos com datas nos formatos DD-MM, DD-MM-AA e DD-MM-AAAA. Os cabeçalhos são normalizados para absorver diferenças como Tipo de Visita e Tipo visita, Etapa da Visita e Etapa Visita, além de caracteres acentuados danificados por exportações.')
     add_heading(doc, '5.2 Chave de visita', 2)
-    add_body(doc, 'O contrato não é usado isoladamente para eliminar duplicidades. A comparação considera o identificador do contrato, a data de início, a placa, o tipo de visita e o técnico. Essa composição reduz o risco de fundir visitas diferentes do mesmo contrato.')
+    add_body(doc, 'O contrato não é usado isoladamente para eliminar duplicidades. Entre as planilhas diárias, a comparação procura o mesmo contrato no mesmo dia e usa placa, tipo de visita e proximidade do horário para escolher o registro correto. Ajustes de até quatro horas são aceitos; diferenças maiores permanecem como visitas distintas para não misturar turnos. Técnico e prestador podem mudar durante o atendimento sem criar uma nova visita.')
     add_heading(doc, '5.3 Categorias oficiais', 2)
     categories = [
         ('Reagendamento', 'Lançado pelo supervisor'), ('Reagendamento', 'Cancelado pelo cliente'),
@@ -420,7 +422,7 @@ def build():
     add_heading(doc, '5.4 Painel e detalhamento', 2)
     add_body(doc, 'O Painel é uma Tabela Dinâmica nativa do Excel, não uma tabela estática. O filtro é disponibilizado no campo Rótulos de Linha. O duplo clique em uma contagem cria uma nova aba de detalhes com os registros que compõem aquele total.')
     add_heading(doc, '5.5 Resultado e chegada das visitas atrasadas', 2)
-    add_body(doc, 'Para as categorias Atrasado - Técnico informou e Atrasado - Técnico não informou, o motor procura a mesma visita no relatório final pelo contrato, data e hora de início, placa e tipo de visita. Se a cópia enviada para Inconformidades ainda estiver como Agendada, ela recebe o resultado final. O campo Informações recebe o horário real no padrão Chegou às 12h35 e também reúne os motivos encontrados nas fontes final e diária. A linha original da aba diária não é modificada.')
+    add_body(doc, 'Para as categorias Atrasado - Técnico informou e Atrasado - Técnico não informou, o motor procura o mesmo contrato no mesmo dia e seleciona no relatório final o horário mais próximo, usando placa e tipo de visita como confirmação. A tolerância de até quatro horas cobre remarcações sem misturar visitas de turnos diferentes. Técnico e prestador não fazem parte da chave. Se existir motivo na planilha final ou diária, Informações mantém somente o motivo. Sem motivo, o horário é apresentado como Chegou às 12h35. A linha original da aba diária não é modificada.')
 
     add_heading(doc, '6 Segurança privacidade e recuperação', 1)
     add_heading(doc, '6.1 Proteção dos dados', 2)
@@ -462,7 +464,7 @@ def build():
 
     add_heading(doc, '8 Versionamento Git e publicação', 1)
     add_heading(doc, '8.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.2.1, com correções de padronização, motivos e abertura do Excel.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.2.2, com comparação tolerante a mudanças operacionais e prioridade correta das informações.')
     add_heading(doc, '8.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -534,6 +536,7 @@ def build():
         ['0.1.0','1.0','09/11/2026','Leonardo Aguiar','Estrutura inicial do AutoPlan Hub, módulo Consolidador, identidade visual, Git e documentação.'],
         ['0.2.0','1.1','09/11/2026','Leonardo Aguiar','Resultado final e horário de chegada dos atrasos atualizados somente em Inconformidades.'],
         ['0.2.1','1.2','09/11/2026','Leonardo Aguiar','Padronização de horários, motivos em Informações e abertura mais robusta do Excel.'],
+        ['0.2.2','1.3','09/11/2026','Leonardo Aguiar','Comparação por dia e horário próximo, motivo prioritário e datas padronizadas.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value

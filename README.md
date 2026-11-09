@@ -4,7 +4,7 @@
 
 Central local de automações para rotinas operacionais.
 
-**Versão:** 0.2.1  
+**Versão:** 0.2.2  
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automação disponível
@@ -18,6 +18,9 @@ Central local de automações para rotinas operacionais.
 - Nas inconformidades de atraso, substitui o estado Agendada pelo resultado do relatório final.
 - Registra o horário real no formato `Chegou às 12h35`, sem alterar as abas diárias.
 - Leva os motivos encontrados nas planilhas final e diárias para `Informações`.
+- Quando existe motivo, mantém somente o motivo em `Informações`, sem o texto de chegada.
+- Aceita ajuste de horário de até 4 horas e troca de técnico/prestador ao localizar a mesma visita, sem misturar atendimentos de turnos diferentes.
+- Formata datas e horários como `DD/MM/AAAA HH:MM`.
 - Aceita pequenas variações nos nomes das abas e tenta reabrir o arquivo antes de falhar.
 - Cria um Painel com Tabela Dinâmica nativa do Excel.
 - Permite abrir os detalhes das contagens com duplo clique.
