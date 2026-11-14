@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from collections import Counter, defaultdict
 from datetime import datetime
+from difflib import SequenceMatcher
 from pathlib import Path
 
 from openpyxl import Workbook, load_workbook
@@ -139,6 +140,44 @@ def infer_period_from_mother(path):
     return Counter((value.year, value.month) for value in dates).most_common(1)[0][0]
 
 
+def _technician_name_variants(value):
+    """Chaves estáveis para nomes com ou sem complemento de empresa/equipe."""
+    normalized = mother_engine.plain(value)
+    if not normalized:
+        return []
+    variants = [normalized]
+    for separator in (' - ', ' / ', ' | '):
+        if separator in normalized:
+            base = normalized.split(separator, 1)[0].strip()
+            if len(base.split()) >= 2 and base not in variants:
+                variants.append(base)
+    return variants
+
+
+def _fuzzy_technician_supervisor(technician, mapping):
+    variants = _technician_name_variants(technician)
+    if not variants:
+        return None, None
+    candidates = []
+    for key, supervisor in mapping.items():
+        if not key.startswith('tecnico_nome::'):
+            continue
+        known = key.split('::', 1)[1]
+        score = max(SequenceMatcher(None, variant, known).ratio() for variant in variants)
+        if score >= 0.92:
+            candidates.append((score, known, supervisor))
+    if not candidates:
+        return None, None
+    candidates.sort(reverse=True)
+    best_score, best_name, best_supervisor = candidates[0]
+    competing = [item for item in candidates[1:]
+                 if item[0] >= best_score - 0.03
+                 and mother_engine.plain(item[2]) != mother_engine.plain(best_supervisor)]
+    if competing:
+        return None, None
+    return best_supervisor, best_name
+
+
 def load_supervision_mapping(previous_rank, report=None):
     """Reaproveita Técnico -> Supervisão e prestadores não ambíguos do Rank anterior."""
     if not previous_rank:
@@ -147,6 +186,7 @@ def load_supervision_mapping(previous_rank, report=None):
     mapping = {}
     conflicts = set()
     providers = defaultdict(set)
+    technician_names = defaultdict(set)
     try:
         sheet = next((ws for ws in workbook.worksheets
                       if mother_engine.plain(ws.title) == 'base supervisao'), None)
@@ -166,11 +206,16 @@ def load_supervision_mapping(previous_rank, report=None):
                     conflicts.add(str(technician))
                 else:
                     mapping[key] = supervisor
+                for variant in _technician_name_variants(technician):
+                    technician_names[variant].add(supervisor)
             if provider not in (None, ''):
                 providers[mother_engine.plain(provider)].add(supervisor)
         for provider, supervisors in providers.items():
             if len(supervisors) == 1:
                 mapping[f'prestador::{provider}'] = next(iter(supervisors))
+        for technician_name, supervisors in technician_names.items():
+            if len(supervisors) == 1:
+                mapping[f'tecnico_nome::{technician_name}'] = next(iter(supervisors))
     finally:
         workbook.close()
     if report is not None:
@@ -266,12 +311,25 @@ def build_supervision_base(inconformities, mapping):
         if supervisor:
             item['_supervision_source'] = 'Técnico'
         else:
+            for variant in _technician_name_variants(item.get('tecnico')):
+                supervisor = mapping.get(f'tecnico_nome::{variant}')
+                if supervisor:
+                    item['_supervision_source'] = 'Nome-base do técnico'
+                    break
+        if not supervisor:
+            supervisor, matched_name = _fuzzy_technician_supervisor(item.get('tecnico'), mapping)
+            if supervisor:
+                item['_supervision_source'] = f'Nome aproximado do técnico: {matched_name}'
+        if not supervisor:
             supervisor = mapping.get(f'prestador::{provider}')
             if supervisor:
                 item['_supervision_source'] = 'Prestador sem ambiguidade'
         item['supervisao'] = supervisor or 'Não mapeado'
         if not supervisor:
             item['_supervision_source'] = 'Sem vínculo'
+        if not provider and item.get('tecnico') not in (None, ''):
+            item['prestador de servico do tecnico'] = str(item.get('tecnico')).strip()
+            item['_provider_source'] = 'Técnico usado porque o prestador estava vazio'
         result.append(item)
     return result
 

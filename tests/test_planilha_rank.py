@@ -92,6 +92,36 @@ class PlanilhaRankTests(unittest.TestCase):
         ], mapping)
         self.assertEqual(base[0]['supervisao'], 'Supervisor B')
 
+    def test_supervisao_compara_nome_base_do_tecnico(self):
+        mapping = {
+            'tecnico_nome::paulo ricardo queiroz de oliveira': 'Supervisor A',
+        }
+        base = engine.build_supervision_base([
+            record(1, '', 'Atrasado - Técnico não informou',
+                   'Atrasado - Técnico não informou') | {
+                       'tecnico': 'Paulo Ricardo Queiroz de Oliveira - Equipe Curitiba',
+                   },
+        ], mapping)
+        self.assertEqual(base[0]['supervisao'], 'Supervisor A')
+        self.assertEqual(base[0]['_supervision_source'], 'Nome-base do técnico')
+        self.assertEqual(
+            base[0]['prestador de servico do tecnico'],
+            'Paulo Ricardo Queiroz de Oliveira - Equipe Curitiba',
+        )
+
+    def test_supervisao_aceita_pequena_variacao_unica_no_nome(self):
+        mapping = {
+            'tecnico_nome::paulo ricardo queiroz de oliveira': 'Supervisor A',
+        }
+        base = engine.build_supervision_base([
+            record(1, 'Prestador A', 'Atrasado - Técnico não informou',
+                   'Atrasado - Técnico não informou') | {
+                       'tecnico': 'Paulo Ricardo Queiróz de Oliviera',
+                   },
+        ], mapping)
+        self.assertEqual(base[0]['supervisao'], 'Supervisor A')
+        self.assertTrue(base[0]['_supervision_source'].startswith('Nome aproximado'))
+
     def test_log_informa_mapeamento_de_supervisao(self):
         with tempfile.TemporaryDirectory() as folder:
             mother = Path(folder) / 'mae.xlsx'
