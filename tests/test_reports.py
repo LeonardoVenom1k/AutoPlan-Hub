@@ -19,6 +19,7 @@ class ProcessingReportTests(unittest.TestCase):
             ['Painel criado.', 'CONFLITO ID 10.'], datetime(2026, 11, 14, 12, 0),
         )
         self.assertIn('2. ARQUIVOS UTILIZADOS', text)
+        self.assertIn('Relatório final mais recente usado na comparação: final.xlsx', text)
         self.assertIn('Planilhas diárias selecionadas: 2', text)
         self.assertIn('Registros adicionados durante a atualização: 12', text)
         self.assertIn('CONFLITO ID 10.', text)

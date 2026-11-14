@@ -67,7 +67,7 @@ def build_report_text(config, output, backup, added, events, generated_at=None):
         f'Arquivo resultante: {output}\n'
         f'Backup: {backup_text}\n\n'
         '2. ARQUIVOS UTILIZADOS\n'
-        f'Relatório final do mês: {Path(config.final_file).name}\n'
+        f'Relatório final mais recente usado na comparação: {Path(config.final_file).name}\n'
         f'Planilhas diárias selecionadas: {len(config.daily_files)}\n'
         f'{daily_files}\n\n'
         '3. RESULTADO RESUMIDO\n'

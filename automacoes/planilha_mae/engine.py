@@ -1056,7 +1056,7 @@ class App(tk.Tk):
         self.files_list.pack(side='left',fill='both',expand=True)
         files_scroll.pack(side='right',fill='y')
         ttk.Button(self.files_frame,text='Selecionar planilhas...',command=self.pick_daily).grid(row=1,column=1,padx=5,sticky='n')
-        ttk.Label(self.files_frame,text='Relatório final do mês (fonte das inconformidades):').grid(row=2,column=0,sticky='w',pady=(7,0))
+        ttk.Label(self.files_frame,text='Relatório final mais recente (comparação de resultados e horários):').grid(row=2,column=0,sticky='w',pady=(7,0))
         ttk.Entry(self.files_frame,textvariable=self.final_file).grid(row=3,column=0,sticky='ew',pady=3)
         ttk.Button(self.files_frame,text='Selecionar relatório...',command=self.pick_final).grid(row=3,column=1,padx=5)
         self.output_label=ttk.Label(self.files_frame,text='Pasta de saída:')
