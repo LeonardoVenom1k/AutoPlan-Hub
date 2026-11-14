@@ -214,7 +214,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.3.1').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.3.2').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -256,8 +256,8 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.3.1'),
-        ('Versão do documento', '1.5'),
+        ('Versão do software', '0.3.2'),
+        ('Versão do documento', '1.6'),
         ('Responsável', 'Leonardo Aguiar'),
         ('Data de emissão', '14 de novembro de 2026'),
     ]
@@ -279,7 +279,7 @@ def build():
 
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório privado.')
-    add_body(doc, 'A versão 0.3.1 corrige a atualização das inconformidades. O relatório final é localizado pelo ID do contrato mesmo após remarcações de horário, e o resultado mais avançado passa a preencher igualmente Etapa Visita e Status sem modificar as abas diárias.')
+    add_body(doc, 'A versão 0.3.2 prioriza as explicações preenchidas em Informações nas planilhas diárias. Justificativas de reagendamento, clima, contato e outras observações são preservadas integralmente; mensagens que contêm somente o horário de chegada continuam padronizadas.')
 
     add_heading(doc, 'Conteúdo do documento', 2)
     contents = [
@@ -302,7 +302,7 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.3.1', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.3.2', 2)
     add_bullets(doc, [
         'Menu principal com acesso às automações disponíveis.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
@@ -320,6 +320,7 @@ def build():
         'Gerador de Planilha Rank em janela independente, alimentado pela Planilha Mãe.',
         'Rankings The Best, Ugly e No Show, painéis por cliente e supervisão e quatro Tabelas Dinâmicas nativas.',
         'Sincronização do resultado final em Etapa Visita e Status nas inconformidades, com prioridade para o ID do contrato.',
+        'Prioridade para informações explicativas registradas nas planilhas diárias.',
     ])
     add_heading(doc, '1.3 Público e ambiente de uso', 2)
     add_body(doc, 'O software foi projetado para uso local em Windows, com Microsoft Excel instalado. O repositório deve permanecer privado enquanto contiver regras operacionais específicas. Arquivos com dados reais não devem ser versionados.')
@@ -448,7 +449,7 @@ def build():
     add_heading(doc, '6.4 Painel e detalhamento', 2)
     add_body(doc, 'O Painel é uma Tabela Dinâmica nativa do Excel, não uma tabela estática. O filtro é disponibilizado no campo Rótulos de Linha. O duplo clique em uma contagem cria uma nova aba de detalhes com os registros que compõem aquele total.')
     add_heading(doc, '6.5 Resultado e chegada das visitas atrasadas', 2)
-    add_body(doc, 'Para as categorias Atrasado - Técnico informou e Atrasado - Técnico não informou, o motor procura primeiro o ID do contrato no relatório final. Quando o contrato aparece uma única vez, a correspondência é aceita mesmo após uma remarcação de horário. Se houver mais de uma visita do mesmo contrato, data, proximidade do horário, placa e tipo de visita evitam misturar atendimentos diferentes. O resultado operacional mais avançado é gravado igualmente em Etapa Visita e Status somente na cópia de Inconformidades. Se existir motivo na planilha final ou diária, Informações mantém somente o motivo; sem motivo, o horário é apresentado como Chegou às 12h35. A linha original da aba diária não é modificada.')
+    add_body(doc, 'Para as categorias Atrasado - Técnico informou e Atrasado - Técnico não informou, o motor procura primeiro o ID do contrato no relatório final. Quando o contrato aparece uma única vez, a correspondência é aceita mesmo após uma remarcação de horário. Se houver mais de uma visita do mesmo contrato, data, proximidade do horário, placa e tipo de visita evitam misturar atendimentos diferentes. O resultado operacional mais avançado é gravado igualmente em Etapa Visita e Status somente na cópia de Inconformidades. Uma explicação preenchida em Informações na planilha diária tem prioridade sobre o motivo final e sobre a chegada automática. Se o conteúdo for apenas uma chegada, ele é padronizado como Chegou às 12h35. A linha original da aba diária não é modificada.')
 
     add_heading(doc, '7 Segurança privacidade e recuperação', 1)
     add_heading(doc, '7.1 Proteção dos dados', 2)
@@ -491,7 +492,7 @@ def build():
 
     add_heading(doc, '9 Versionamento Git e publicação', 1)
     add_heading(doc, '9.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.3.1, que corrige a sincronização do resultado final nas inconformidades.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.3.2, que preserva as informações explicativas das planilhas diárias nas inconformidades.')
     add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -570,6 +571,7 @@ def build():
         ['0.2.2','1.3','09/11/2026','Leonardo Aguiar','Comparação por dia e horário próximo, motivo prioritário e datas padronizadas.'],
         ['0.3.0','1.4','14/11/2026','Leonardo Aguiar','Gerador de Planilha Rank, rankings, painéis dinâmicos e reaproveitamento da supervisão.'],
         ['0.3.1','1.5','14/11/2026','Leonardo Aguiar','Correspondência por contrato e sincronização de Etapa Visita e Status nas inconformidades.'],
+        ['0.3.2','1.6','14/11/2026','Leonardo Aguiar','Prioridade para explicações registradas em Informações nas planilhas diárias.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value

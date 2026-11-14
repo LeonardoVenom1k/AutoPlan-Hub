@@ -4,7 +4,7 @@
 
 Central local de automações para rotinas operacionais.
 
-**Versão:** 0.3.1
+**Versão:** 0.3.2
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automações disponíveis
@@ -27,6 +27,7 @@ Central local de automações para rotinas operacionais.
 - Cria backup antes de atualizar uma Planilha Mãe existente.
 - Nas inconformidades, cruza o relatório final pelo ID do contrato mesmo quando o horário foi remarcado.
 - Mantém `Etapa Visita` e `Status` com o mesmo resultado final, sem alterar as abas diárias.
+- Preserva e prioriza explicações preenchidas em `Informações` nas planilhas diárias; mensagens que contêm somente a chegada continuam padronizadas.
 
 ### Gerador de Planilha Rank
 
