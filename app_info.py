@@ -13,6 +13,22 @@ REVIEW_NOTICE = (
 APP_ROOT = Path(__file__).resolve().parent
 ICON_PNG = APP_ROOT / 'assets' / 'autoplan-hub-icon.png'
 ICON_ICO = APP_ROOT / 'assets' / 'autoplan-hub.ico'
+NOTIFICATION_SOUND = APP_ROOT / 'sounds' / '872716__heyheytheree__notify-sci-fi-ui-sfx-free.wav'
+
+
+def play_notification_sound():
+    """Reproduz o aviso de conclusão sem bloquear a interface."""
+    try:
+        import winsound
+        if not NOTIFICATION_SOUND.is_file():
+            return False
+        winsound.PlaySound(
+            str(NOTIFICATION_SOUND),
+            winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT,
+        )
+        return True
+    except Exception:
+        return False
 
 
 def center_window(window, width, height):

@@ -7,7 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from app_info import APP_AUTHOR, APP_NAME, APP_VERSION, REVIEW_NOTICE, apply_window_icon, center_window
+from app_info import (APP_AUTHOR, APP_NAME, APP_VERSION, REVIEW_NOTICE,
+                      apply_window_icon, center_window, play_notification_sound)
 from automacoes.planilha_mae.theme import COLORS, configure_styles
 from . import engine
 from .service import RankJobConfig, planned_output, process, validate
@@ -210,6 +211,7 @@ class RankWindow(tk.Tk):
                     result = event[1]
                     self.run_button.state(['!disabled'])
                     self._log(f'Concluído: {result.output}', 'ok')
+                    play_notification_sound()
                     self._log(
                         f'Mapeamento de supervisão: {result.mapped}/{result.occurrences} '
                         f'ocorrência(s); {result.unmapped} não mapeada(s).',
