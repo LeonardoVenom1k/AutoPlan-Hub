@@ -76,7 +76,7 @@ class RankWindow(tk.Tk):
 
         ttk.Label(source, text='Planilha Rank anterior ou modelo (opcional)',
                   style='Card.TLabel').grid(row=3, column=0, sticky='w')
-        ttk.Label(source, text='Reaproveita o vínculo entre prestadores e supervisão.',
+        ttk.Label(source, text='Reaproveita o vínculo entre técnicos e supervisão.',
                   style='Muted.TLabel').grid(row=3, column=1, sticky='e', padx=8)
         ttk.Entry(source, textvariable=self.previous_rank).grid(
             row=4, column=0, columnspan=2, sticky='ew', padx=(0, 8), pady=(5, 0))
@@ -182,6 +182,10 @@ class RankWindow(tk.Tk):
         self.progress['value'] = 0
         self.run_button.state(['disabled'])
         self._log('Iniciando geração da Planilha Rank...', 'info')
+        if config.previous_rank:
+            self._log(f'Rank usado no mapeamento: {Path(config.previous_rank).name}', 'info')
+        else:
+            self._log('ATENÇÃO: nenhum Rank anterior foi selecionado; a supervisão ficará Não mapeado.', 'error')
         self.worker = threading.Thread(target=self._worker, args=(config,), daemon=True)
         self.worker.start()
 
@@ -206,11 +210,22 @@ class RankWindow(tk.Tk):
                     result = event[1]
                     self.run_button.state(['!disabled'])
                     self._log(f'Concluído: {result.output}', 'ok')
+                    self._log(
+                        f'Mapeamento de supervisão: {result.mapped}/{result.occurrences} '
+                        f'ocorrência(s); {result.unmapped} não mapeada(s).',
+                        'ok' if result.unmapped == 0 else 'error',
+                    )
+                    self._log(
+                        f'Vínculos carregados: {result.mapping_technicians} técnico(s) e '
+                        f'{result.mapping_providers} prestador(es) sem ambiguidade.',
+                        'info',
+                    )
                     messagebox.showinfo(
                         'Planilha Rank concluída',
                         f'Arquivo:\n{result.output}\n\nRelatório:\n{result.report}\n\n'
                         f'Visitas no ranking: {result.base_rank}\n'
                         f'Ocorrências: {result.occurrences}\n'
+                        f'Mapeadas: {result.mapped}\n'
                         f'Não mapeadas: {result.unmapped}',
                     )
                 elif event[0] == 'error':

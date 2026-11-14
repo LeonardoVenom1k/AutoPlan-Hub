@@ -86,6 +86,47 @@ class PlanilhaRankTests(unittest.TestCase):
         ], mapping)
         self.assertEqual(base[0]['supervisao'], 'Supervisor B')
 
+    def test_log_informa_mapeamento_de_supervisao(self):
+        with tempfile.TemporaryDirectory() as folder:
+            mother = Path(folder) / 'mae.xlsx'
+            previous = Path(folder) / 'rank-anterior.xlsx'
+            output = Path(folder) / 'rank.xlsx'
+
+            workbook = Workbook()
+            daily = workbook.active
+            daily.title = '01-10-2026'
+            daily.append(engine.HEADERS)
+            inconformities = workbook.create_sheet('Inconformidades')
+            inconformities.append(engine.HEADERS)
+            inconformities.append([
+                1, 'Cliente', 'Técnico A', 'Prestador A', 'Manutenção', 'Cancelada',
+                None, 'Atrasado - Técnico não informou', None,
+                datetime(2026, 10, 1, 8), None, None, None, 'ABC1D23', None,
+            ])
+            workbook.save(mother)
+
+            workbook = Workbook()
+            base = workbook.active
+            base.title = 'Base Supervisão'
+            base.append(engine.SUPERVISION_HEADERS)
+            base.append([1, 'Cliente', 'Técnico A', 'Prestador A', 'Supervisora A'] + [None] * 11)
+            workbook.save(previous)
+
+            report = []
+            progress = []
+            counts = engine.create_rank_workbook(
+                mother, output, previous, report,
+                lambda value, message: progress.append((value, message)),
+            )
+
+            self.assertEqual(counts['mapped'], 1)
+            self.assertEqual(counts['unmapped'], 0)
+            self.assertTrue(any('Mapeamento carregado: 1 técnico' in message
+                                for _, message in progress))
+            self.assertTrue(any('Supervisão aplicada: 1/1' in message
+                                for _, message in progress))
+            self.assertIn('Supervisão aplicada: 1 de 1 ocorrência(s); 0 não mapeada(s).', report)
+
     def test_cria_estrutura_com_abas_e_tabelas(self):
         with tempfile.TemporaryDirectory() as folder:
             mother = Path(folder) / 'mae.xlsx'

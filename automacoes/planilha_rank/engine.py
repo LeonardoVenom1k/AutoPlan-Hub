@@ -382,7 +382,20 @@ def create_rank_workbook(mother_file, output, previous_rank='', report=None, pro
     if progress:
         progress(8, 'Lendo a Planilha Mãe...')
     daily, inconformities, _ = read_mother(mother_file)
+    if progress:
+        if previous_rank:
+            progress(14, 'Mapeando supervisão pelos técnicos da Planilha Rank anterior...')
+        else:
+            progress(14, 'Nenhuma Planilha Rank anterior selecionada; não há vínculo de supervisão para reaproveitar.')
     mapping = load_supervision_mapping(previous_rank, report)
+    mapping_technicians = sum(key.startswith('tecnico::') for key in mapping)
+    mapping_providers = sum(key.startswith('prestador::') for key in mapping)
+    if progress and previous_rank:
+        progress(
+            20,
+            f'Mapeamento carregado: {mapping_technicians} técnico(s) e '
+            f'{mapping_providers} prestador(es) sem ambiguidade.',
+        )
     base_rank = build_base_rank(daily, inconformities)
     vehicle_base = build_vehicle_base(inconformities)
     supervision_base = build_supervision_base(inconformities, mapping)
@@ -445,6 +458,7 @@ def create_rank_workbook(mother_file, output, previous_rank='', report=None, pro
     workbook.close()
 
     unmapped = sum(1 for row in supervision_base if row.get('supervisao') == 'Não mapeado')
+    mapped = len(supervision_base) - unmapped
     report.extend([
         f'Visitas consideradas no ranking: {len(base_rank)}.',
         f'Ocorrências consideradas: {len(supervision_base)}.',
@@ -453,11 +467,23 @@ def create_rank_workbook(mother_file, output, previous_rank='', report=None, pro
     ])
     if unmapped:
         report.append(f'AVISO: {unmapped} ocorrência(s) ficaram com Supervisão = Não mapeado.')
+    report.append(
+        f'Supervisão aplicada: {mapped} de {len(supervision_base)} ocorrência(s); '
+        f'{unmapped} não mapeada(s).'
+    )
+    if progress:
+        progress(
+            68,
+            f'Supervisão aplicada: {mapped}/{len(supervision_base)} ocorrência(s) mapeada(s); '
+            f'{unmapped} não mapeada(s).',
+        )
     if progress:
         progress(72, 'Arquivo-base do Rank criado.')
     return {
         'base_rank': len(base_rank), 'occurrences': len(supervision_base),
-        'vehicle': len(vehicle_base), 'unmapped': unmapped,
+        'vehicle': len(vehicle_base), 'unmapped': unmapped, 'mapped': mapped,
+        'mapping_technicians': mapping_technicians,
+        'mapping_providers': mapping_providers,
     }
 
 

@@ -24,6 +24,9 @@ class RankJobResult:
     occurrences: int
     vehicle: int
     unmapped: int
+    mapped: int
+    mapping_technicians: int
+    mapping_providers: int
 
 
 def planned_output(config):
@@ -57,6 +60,8 @@ def process(config, progress=lambda value, message: None):
         f'Relatório: {datetime.now():%d/%m/%Y %H:%M:%S}\n'
         f'Arquivo: {output}\n'
         f'Planilha Mãe: {Path(config.mother_file).name}\n'
+        f'Planilha Rank usada no mapeamento: '
+        f'{Path(config.previous_rank).name if config.previous_rank else "não selecionada"}\n'
         f'Período: {engine.MONTHS_PT[config.month]} {config.year}\n\n'
         + '\n'.join(report),
         encoding='utf-8',
