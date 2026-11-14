@@ -214,7 +214,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.4.1').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.4.2').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -256,8 +256,8 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.4.1'),
-        ('Versão do documento', '2.1'),
+        ('Versão do software', '0.4.2'),
+        ('Versão do documento', '2.2'),
         ('Responsável', 'Leonardo Aguiar'),
         ('Data de emissão', '14 de novembro de 2026'),
     ]
@@ -279,7 +279,7 @@ def build():
 
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório privado.')
-    add_body(doc, 'A versão 0.4.1 melhora a leitura da base de inconformidades da Planilha Rank. Todas as células recebem uma grade preta fina, mantendo o cabeçalho, as faixas azuis, os filtros e os dados existentes.')
+    add_body(doc, 'A versão 0.4.2 melhora a associação do Painel Supervisão. O sistema compara o nome completo e o nome-base do técnico, aceita pequenas variações somente quando há um candidato confiável e usa o nome do técnico quando o prestador estiver vazio.')
 
     add_heading(doc, 'Conteúdo do documento', 2)
     contents = [
@@ -302,7 +302,7 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.4.1', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.4.2', 2)
     add_bullets(doc, [
         'Menu principal com acesso às automações disponíveis.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
@@ -423,6 +423,7 @@ def build():
     add_heading(doc, '5.5 Painéis dinâmicos', 2)
     add_body(doc, 'Os quatro painéis são Tabelas Dinâmicas nativas do Excel. Os filtros permanecem disponíveis e o duplo clique em uma contagem abre os registros que formam aquele total. No Painel Veículo Indisponível, os clientes são ordenados do maior Total Geral para o menor. Os painéis de supervisão e de veículo indisponível exibem grades completas. No Rank Ugly, o quadro de No Show fica abaixo da tabela principal com cabeçalho vermelho. A aba Inconformidades segue o mesmo padrão visual da Planilha Mãe. As bases técnicas ficam ocultas para preservar a apresentação sem impedir auditoria ou atualização.')
     add_body(doc, 'No Painel Supervisão, o vínculo é reaproveitado pelo campo Técnico. O prestador é usado somente como alternativa quando todos os seus registros conhecidos pertencem à mesma supervisão, evitando classificar incorretamente empresas que possuem técnicos de equipes diferentes. A Tabela Dinâmica apresenta apenas a hierarquia Supervisão e Prestador; o técnico é uma chave interna de associação e não aparece como terceiro nível do painel.')
+    add_body(doc, 'A comparação de técnicos normaliza acentos, maiúsculas e espaços, considera o nome antes de complementos de equipe ou empresa e permite aproximação textual apenas quando existe um único candidato seguro. Se o registro não possuir prestador, o painel utiliza o nome do técnico como rótulo, evitando o agrupamento (vazio).')
     add_body(doc, 'Durante o processamento, o log mostra a leitura do Rank anterior e cada associação no formato Técnico para Supervisão, indicando se o vínculo veio do próprio técnico ou de um prestador sem ambiguidade. Também apresenta os totais carregados, mapeados e não mapeados. Quando nenhum Rank anterior é selecionado, a tela exibe um aviso explícito. O relatório final registra a mesma auditoria para facilitar a conferência posterior.')
     add_heading(doc, '5.6 Relatórios e revisão obrigatória', 2)
     add_body(doc, 'Os relatórios são organizados em seções de identificação, arquivos utilizados, resultado resumido, detalhamento do processamento, método de mapeamento quando aplicável e checklist de revisão. Ao finalizar qualquer geração ou atualização, o AutoPlan Hub também exibe um aviso para que o usuário revise dados ausentes, conflitos, totais, associações e detalhes antes de entregar, enviar ou considerar a planilha como versão oficial.')
@@ -497,7 +498,7 @@ def build():
 
     add_heading(doc, '9 Versionamento Git e publicação', 1)
     add_heading(doc, '9.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.4.1, que acrescenta a grade completa na aba Inconformidades da Planilha Rank.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.4.2, que melhora a associação de técnicos e elimina prestadores vazios no Painel Supervisão.')
     add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -582,6 +583,7 @@ def build():
         ['0.3.5','1.9','14/11/2026','Leonardo Aguiar','Log detalha o mapeamento e o painel organiza Supervisão e Prestador.'],
         ['0.4.0','2.0','14/11/2026','Leonardo Aguiar','Relatórios completos e aviso obrigatório de revisão antes da entrega.'],
         ['0.4.1','2.1','14/11/2026','Leonardo Aguiar','Grade preta fina aplicada em toda a base de inconformidades do Rank.'],
+        ['0.4.2','2.2','14/11/2026','Leonardo Aguiar','Associação de técnicos aprimorada e prestadores vazios preenchidos pelo técnico.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value

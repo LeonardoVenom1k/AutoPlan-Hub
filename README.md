@@ -4,7 +4,7 @@
 
 Central local de automações para rotinas operacionais.
 
-**Versão:** 0.4.1
+**Versão:** 0.4.2
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automações disponíveis
@@ -49,6 +49,8 @@ Central local de automações para rotinas operacionais.
 - Gera relatórios divididos em identificação, arquivos utilizados, resultados, detalhamento do processamento e checklist de revisão.
 - Ao concluir qualquer geração ou atualização, avisa que a planilha deve ser revisada antes de ser entregue ou usada como versão oficial.
 - Aplica uma grade preta fina em toda a aba `Inconformidades` da Planilha Rank, preservando as faixas azuis.
+- Compara técnicos por nome completo, nome-base e aproximação segura quando houver um único candidato confiável.
+- Quando o prestador estiver vazio no Painel Supervisão, usa o nome do técnico no lugar de `(vazio)`.
 
 ## Requisitos
 
