@@ -19,6 +19,12 @@ def record(identifier, provider, stage='Concluído', observation=None, client='C
 
 
 class PlanilhaRankTests(unittest.TestCase):
+    def test_painel_supervisao_exibe_supervisor_e_prestadores(self):
+        self.assertEqual(
+            engine.SUPERVISION_ROW_FIELDS,
+            ['Supervisão', 'Prestador de Serviço do Técnico'],
+        )
+
     def test_monta_base_com_concluidas_e_ocorrencias(self):
         daily = [
             record(1, 'Prestador A'),
@@ -125,6 +131,10 @@ class PlanilhaRankTests(unittest.TestCase):
                                 for _, message in progress))
             self.assertTrue(any('Supervisão aplicada: 1/1' in message
                                 for _, message in progress))
+            self.assertTrue(any(
+                'Técnico: Técnico A -> Supervisão: Supervisora A (fonte: Técnico)' in message
+                for _, message in progress
+            ))
             self.assertIn('Supervisão aplicada: 1 de 1 ocorrência(s); 0 não mapeada(s).', report)
 
     def test_cria_estrutura_com_abas_e_tabelas(self):

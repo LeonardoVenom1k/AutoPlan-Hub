@@ -16,6 +16,7 @@ from automacoes.planilha_mae import engine as mother_engine
 
 HEADERS = mother_engine.STANDARD_HEADERS
 SUPERVISION_HEADERS = HEADERS[:4] + ['Supervisão'] + HEADERS[4:]
+SUPERVISION_ROW_FIELDS = ['Supervisão', 'Prestador de Serviço do Técnico']
 MONTHS_PT = mother_engine.MONTHS_PT
 
 PENALTY_CATEGORIES = (
@@ -261,11 +262,16 @@ def build_supervision_base(inconformities, mapping):
         item['observacoes'] = category
         technician = mother_engine.plain(item.get('tecnico'))
         provider = mother_engine.plain(item.get('prestador de servico do tecnico'))
-        item['supervisao'] = (
-            mapping.get(f'tecnico::{technician}')
-            or mapping.get(f'prestador::{provider}')
-            or 'Não mapeado'
-        )
+        supervisor = mapping.get(f'tecnico::{technician}')
+        if supervisor:
+            item['_supervision_source'] = 'Técnico'
+        else:
+            supervisor = mapping.get(f'prestador::{provider}')
+            if supervisor:
+                item['_supervision_source'] = 'Prestador sem ambiguidade'
+        item['supervisao'] = supervisor or 'Não mapeado'
+        if not supervisor:
+            item['_supervision_source'] = 'Sem vínculo'
         result.append(item)
     return result
 
@@ -399,6 +405,19 @@ def create_rank_workbook(mother_file, output, previous_rank='', report=None, pro
     base_rank = build_base_rank(daily, inconformities)
     vehicle_base = build_vehicle_base(inconformities)
     supervision_base = build_supervision_base(inconformities, mapping)
+    supervision_details = {}
+    for item in supervision_base:
+        technician = str(item.get('tecnico') or '(vazio)').strip()
+        supervisor = str(item.get('supervisao') or 'Não mapeado').strip()
+        source = item.get('_supervision_source', 'Sem vínculo')
+        supervision_details[(technician, supervisor, source)] = None
+    if supervision_details:
+        report.append('Detalhamento do mapeamento Técnico -> Supervisão:')
+        for technician, supervisor, source in supervision_details:
+            detail = f'Técnico: {technician} -> Supervisão: {supervisor} (fonte: {source})'
+            report.append(detail)
+            if progress:
+                progress(66, detail)
     _, best, ugly, no_show = summarize_rank(base_rank)
 
     if progress:
@@ -531,7 +550,7 @@ def create_native_pivots(path, report, progress=None):
             ('Base Veículo Indisponível', 'Painel Veículo Indisponível', 'TabelaBaseVeiculo',
              'PivotVeiculo', ['Cliente'], ['Observações'], 'Observações'),
             ('Base Supervisão', 'Painel Supervisão', 'TabelaBaseSupervisao',
-             'PivotSupervisao', ['Supervisão', 'Prestador de Serviço do Técnico'],
+             'PivotSupervisao', SUPERVISION_ROW_FIELDS,
              ['Observações'], 'Observações'),
         ]
         for source_name, panel_name, table_name, pivot_name, row_fields, column_fields, data_field in specs:
