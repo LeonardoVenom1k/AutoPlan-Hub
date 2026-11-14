@@ -124,16 +124,31 @@ class PlanilhaRankTests(unittest.TestCase):
 
             generated = load_workbook(output, data_only=False)
             rank_ugly = generated['Rank Ugly']
-            self.assertEqual(rank_ugly['A1'].value, engine.PENALTY_CATEGORIES[3])
-            self.assertEqual(rank_ugly['B1'].value.rstrip(), engine.PENALTY_CATEGORIES[3])
-            self.assertNotEqual(rank_ugly['A1'].value, rank_ugly['B1'].value)
-            self.assertEqual(rank_ugly['A1'].fill.fgColor.rgb[-6:], engine.RED)
-            self.assertEqual(rank_ugly['A2'].value, 'Prestador B')
+            self.assertEqual(rank_ugly['A1'].value, 'Rótulos de Linha')
+            no_show_header = next(
+                row for row in range(2, rank_ugly.max_row + 1)
+                if rank_ugly.cell(row, 1).value == engine.PENALTY_CATEGORIES[3]
+            )
+            self.assertGreater(no_show_header, 2)
+            self.assertEqual(
+                rank_ugly.cell(no_show_header, 2).value.rstrip(),
+                engine.PENALTY_CATEGORIES[3],
+            )
+            self.assertEqual(
+                rank_ugly.cell(no_show_header, 1).fill.fgColor.rgb[-6:], engine.RED
+            )
+            self.assertEqual(rank_ugly.cell(no_show_header + 1, 1).value, 'Prestador B')
             inconformities = generated['Inconformidades']
-            self.assertEqual(inconformities['A1'].fill.fgColor.rgb[-6:], engine.WHITE)
-            self.assertEqual(inconformities['A1'].font.color.rgb[-6:], engine.BLACK)
-            self.assertEqual(inconformities['A2'].fill.fgColor.rgb[-6:], engine.INCONFORMITY_BLUE)
-            self.assertEqual(inconformities['A3'].fill.fgColor.rgb[-6:], engine.INCONFORMITY_LIGHT_BLUE)
+            self.assertEqual(inconformities['A1'].fill.fgColor.rgb[-6:], engine.BLUE)
+            self.assertEqual(inconformities['A1'].font.color.rgb[-6:], engine.WHITE)
+            self.assertEqual(
+                inconformities['A2'].fill.fgColor.rgb[-6:],
+                engine.mother_engine.FILL_INCONFORMITY_A,
+            )
+            self.assertEqual(
+                inconformities['A3'].fill.fgColor.rgb[-6:],
+                engine.mother_engine.FILL_INCONFORMITY_B,
+            )
             self.assertIsNone(inconformities.tables['TabelaInconformidades'].tableStyleInfo)
             generated.close()
 

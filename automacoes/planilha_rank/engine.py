@@ -36,10 +36,7 @@ VEHICLE_CATEGORIES = (
 
 BLUE = '4472C4'
 LIGHT_BLUE = 'D9EAF7'
-INCONFORMITY_BLUE = '8EA9DB'
-INCONFORMITY_LIGHT_BLUE = 'B8CCE4'
 RED = 'FF0000'
-BLACK = '000000'
 WHITE = 'FFFFFF'
 BORDER = '9FBAD0'
 DATE_HEADERS = {'data inicio', 'data fim', 'data visita inicio', 'data visita fim'}
@@ -384,8 +381,9 @@ def create_rank_workbook(mother_file, output, previous_rank='', report=None, pro
     sheets = {name: workbook.create_sheet(name) for name in order}
     _style_data_sheet(
         sheets['Inconformidades'], HEADERS, inconformities, 'TabelaInconformidades',
-        header_fill=WHITE, header_font=BLACK,
-        row_fills=(INCONFORMITY_BLUE, INCONFORMITY_LIGHT_BLUE), table_style=None,
+        row_fills=(mother_engine.FILL_INCONFORMITY_A,
+                   mother_engine.FILL_INCONFORMITY_B),
+        table_style=None,
     )
     _style_data_sheet(sheets['Base Rank'], HEADERS, base_rank, 'TabelaBaseRank')
     _style_data_sheet(sheets['Base Veículo Indisponível'], HEADERS, vehicle_base, 'TabelaBaseVeiculo')
@@ -400,19 +398,19 @@ def create_rank_workbook(mother_file, output, previous_rank='', report=None, pro
         (row['provider'], *(row[category] or None for category in PENALTY_CATEGORIES),
          row['occurrences'], row['total']) for row in ugly
     ]
+    _write_simple_table(sheets['Rank Ugly'], 1, ugly_headers, ugly_rows,
+                        'TabelaRankOcorrencias', [55, 22, 26, 20, 36, 14, 14])
     no_show_rows = [
         (row['provider'], row[PENALTY_CATEGORIES[3]], row['occurrences'], row['total'])
         for row in no_show
     ]
+    no_show_start = len(ugly_rows) + 9
     _write_simple_table(
-        sheets['Rank Ugly'], 1,
+        sheets['Rank Ugly'], no_show_start,
         [PENALTY_CATEGORIES[3], PENALTY_CATEGORIES[3] + '\u00a0',
          'Ocorrências', 'Total Geral'],
         no_show_rows, 'TabelaRankNoShow', [55, 36, 14, 14], header_fill=RED,
     )
-    ugly_start = len(no_show_rows) + 9
-    _write_simple_table(sheets['Rank Ugly'], ugly_start, ugly_headers, ugly_rows,
-                        'TabelaRankOcorrencias', [55, 22, 26, 20, 36, 14, 14])
     for name in ('Painel Inconformidades', 'Painel Rank',
                  'Painel Veículo Indisponível', 'Painel Supervisão'):
         sheets[name].sheet_view.showGridLines = True
@@ -524,6 +522,13 @@ def create_native_pivots(path, report, progress=None):
                 pivot.PivotFields('Cliente').AutoSort(
                     xl_descending, f'Contagem de {data_field}'
                 )
+            if panel_name in ('Painel Supervisão', 'Painel Veículo Indisponível'):
+                # O modelo usa uma grade preta fina em toda a Tabela Dinâmica,
+                # inclusive nos rótulos, categorias e totais.
+                borders = pivot.TableRange2.Borders
+                borders.LineStyle = 1
+                borders.Weight = 2
+                borders.Color = 0
             panel.Columns.AutoFit()
             panel.Columns('A').ColumnWidth = min(max(panel.Columns('A').ColumnWidth, 24), 58)
 
