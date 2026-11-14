@@ -316,9 +316,11 @@ def _style_data_sheet(ws, headers, records, table_name):
     for index in range(1, len(headers) + 1):
         ws.column_dimensions[ws.cell(1, index).column_letter].width = widths[index - 1]
     ws.freeze_panes = 'A2'
-    ws.auto_filter.ref = f'A1:{ws.cell(ws.max_row, len(headers)).coordinate}'
+    table_ref = f'A1:{ws.cell(ws.max_row, len(headers)).coordinate}'
     if records:
-        table = Table(displayName=table_name, ref=ws.auto_filter.ref)
+        # A Tabela já possui seus próprios filtros. Manter também um AutoFilter
+        # sobre a mesma faixa gera um XLSX que algumas versões do Excel recusam.
+        table = Table(displayName=table_name, ref=table_ref)
         table.tableStyleInfo = TableStyleInfo(name='TableStyleMedium2', showRowStripes=True,
                                               showFirstColumn=False, showLastColumn=False)
         ws.add_table(table)
@@ -336,7 +338,8 @@ def _write_simple_table(ws, start_row, headers, rows, table_name, widths=None):
         if cell.column <= end_col:
             cell.fill = PatternFill('solid', fgColor=BLUE)
             cell.font = Font(name='Calibri', size=11, bold=True, color=WHITE)
-            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws.row_dimensions[start_row].height = 32
     if rows:
         ref = f'A{start_row}:{ws.cell(end_row, end_col).coordinate}'
         table = Table(displayName=table_name, ref=ref)

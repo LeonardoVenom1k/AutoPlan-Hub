@@ -97,6 +97,8 @@ class PlanilhaRankTests(unittest.TestCase):
             ])
             self.assertEqual(generated['Base Rank'].sheet_state, 'hidden')
             self.assertEqual(generated['Rank The Best']['B2'].value, 1)
+            self.assertIsNone(generated['Base Rank'].auto_filter.ref)
+            self.assertTrue(generated['Rank Ugly']['B1'].alignment.wrap_text)
             generated.close()
 
 
