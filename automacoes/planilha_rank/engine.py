@@ -319,21 +319,27 @@ def _value(record, header):
 
 def _style_data_sheet(ws, headers, records, table_name, *,
                       header_fill=BLUE, header_font=WHITE,
-                      row_fills=None, table_style='TableStyleMedium2'):
+                      row_fills=None, table_style='TableStyleMedium2',
+                      full_grid=False):
     ws.append(headers)
     for record in records:
         ws.append([_value(record, header) for header in headers])
     header = ws[1]
+    grid_side = Side(style='thin', color='000000')
+    grid_border = Border(left=grid_side, right=grid_side,
+                         top=grid_side, bottom=grid_side)
     for cell in header:
         cell.fill = PatternFill('solid', fgColor=header_fill)
         cell.font = Font(name='Calibri', size=11, bold=True, color=header_font)
         cell.alignment = Alignment(horizontal='center', vertical='center')
+        if full_grid:
+            cell.border = grid_border
     thin = Side(style='thin', color=BORDER)
     for row_number, row in enumerate(
             ws.iter_rows(min_row=2, max_row=ws.max_row, max_col=len(headers)), start=2):
         for cell in row:
             cell.font = Font(name='Calibri', size=10)
-            cell.border = Border(bottom=thin)
+            cell.border = grid_border if full_grid else Border(bottom=thin)
             cell.alignment = Alignment(vertical='center')
             if row_fills:
                 cell.fill = PatternFill('solid', fgColor=row_fills[(row_number - 2) % len(row_fills)])
@@ -435,6 +441,7 @@ def create_rank_workbook(mother_file, output, previous_rank='', report=None, pro
         row_fills=(mother_engine.FILL_INCONFORMITY_A,
                    mother_engine.FILL_INCONFORMITY_B),
         table_style=None,
+        full_grid=True,
     )
     _style_data_sheet(sheets['Base Rank'], HEADERS, base_rank, 'TabelaBaseRank')
     _style_data_sheet(sheets['Base Veículo Indisponível'], HEADERS, vehicle_base, 'TabelaBaseVeiculo')

@@ -213,6 +213,13 @@ class PlanilhaRankTests(unittest.TestCase):
                 engine.mother_engine.FILL_INCONFORMITY_B,
             )
             self.assertIsNone(inconformities.tables['TabelaInconformidades'].tableStyleInfo)
+            for coordinate in ('A1', 'A2', 'H2'):
+                cell = inconformities[coordinate]
+                self.assertEqual(cell.border.left.style, 'thin')
+                self.assertEqual(cell.border.right.style, 'thin')
+                self.assertEqual(cell.border.top.style, 'thin')
+                self.assertEqual(cell.border.bottom.style, 'thin')
+                self.assertEqual(cell.border.left.color.rgb[-6:], '000000')
             generated.close()
 
 
