@@ -69,6 +69,7 @@ class InconformidadesTests(unittest.TestCase):
         # Apenas a cópia em Inconformidades recebe o resultado final.
         inconformidades = workbook['Inconformidades']
         self.assertEqual(inconformidades['F2'].value, 'Concluído')
+        self.assertEqual(inconformidades['G2'].value, 'Concluído')
         self.assertEqual(inconformidades['H2'].value, 'Atrasado - Técnico não informou')
         self.assertEqual(
             inconformidades['I2'].value,
@@ -93,6 +94,49 @@ class InconformidadesTests(unittest.TestCase):
             'etapa visita': 'Concluído',
         }
         self.assertIs(engine.find_final_record(source, [final]), final)
+
+    def test_contrato_unico_localiza_resultado_mesmo_com_horario_distante(self):
+        source = {
+            '_id': '1748520',
+            'data inicio': datetime(2026, 10, 13, 9, 0),
+            'etapa visita': 'Agendada',
+        }
+        final = {
+            '_id': '1748520',
+            'data inicio': datetime(2026, 10, 13, 17, 30),
+            'etapa visita': 'Concluído',
+        }
+        self.assertIsNone(engine.find_final_record(source, [final]))
+        self.assertIs(
+            engine.find_final_record(source, [final], accept_unique_contract=True),
+            final,
+        )
+
+    def test_resultado_final_preenche_etapa_e_status_nas_inconformidades(self):
+        workbook = Workbook()
+        daily = workbook.active
+        daily.title = '13-10-2026'
+        daily.append(engine.STANDARD_HEADERS)
+        daily.append([
+            '1748520', 'Cliente', 'Técnico', 'Prestador', 'Manutenção',
+            'Agendada', 'Aguardando ação gestor',
+            'Atrasado - Técnico informou', None,
+            datetime(2026, 10, 13, 9, 0),
+        ])
+        final = {
+            '_id': '1748520', 'id contrato': '1748520',
+            'data inicio': datetime(2026, 10, 13, 17, 30),
+            'etapa visita': 'Concluído', 'status': None,
+            'data visita inicio': datetime(2026, 10, 13, 17, 35),
+        }
+
+        engine.rebuild_inconformities(workbook, [], [final], [], [])
+
+        inconformidades = workbook['Inconformidades']
+        self.assertEqual(inconformidades['F2'].value, 'Concluído')
+        self.assertEqual(inconformidades['G2'].value, 'Concluído')
+        self.assertEqual(daily['F2'].value, 'Agendada')
+        self.assertEqual(daily['G2'].value, 'Aguardando ação gestor')
 
     def test_localiza_mesma_visita_entre_planilhas_dos_colegas(self):
         morning = {

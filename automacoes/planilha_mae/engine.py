@@ -283,18 +283,28 @@ def compose_information(existing=None, arrival=None, *reasons):
     return str(existing).strip() if existing not in (None, '') else None
 
 
-def find_final_record(source, final_records):
-    """Encontra a mesma visita mesmo com troca de técnico ou ajuste de horário."""
+def find_final_record(source, final_records, accept_unique_contract=False):
+    """Encontra a mesma visita mesmo com troca de técnico ou ajuste de horário.
+
+    No relatório final, um contrato que aparece uma única vez é uma
+    correspondência segura mesmo quando a visita foi remarcada para outro
+    horário. Entre planilhas diárias, a tolerância continua limitada para não
+    juntar dois atendimentos diferentes do mesmo contrato.
+    """
     source_id = plain(source.get('_id') or source.get('id contrato'))
     source_start = source.get('data inicio')
     if not source_id:
         return None
 
+    same_contract = [
+        candidate for candidate in final_records
+        if plain(candidate.get('_id') or candidate.get('id contrato')) == source_id
+    ]
+    if accept_unique_contract and len(same_contract) == 1:
+        return same_contract[0]
+
     candidates=[]
-    for candidate in final_records:
-        candidate_id = plain(candidate.get('_id') or candidate.get('id contrato'))
-        if candidate_id != source_id:
-            continue
+    for candidate in same_contract:
         candidate_start = candidate.get('data inicio')
         if isinstance(source_start, datetime) and isinstance(candidate_start, datetime):
             if source_start.date() != candidate_start.date():
@@ -317,6 +327,34 @@ def find_final_record(source, final_records):
         candidates.append((score, candidate))
 
     return max(candidates, key=lambda item: item[0])[1] if candidates else None
+
+
+def visit_result(record):
+    """Retorna o resultado operacional mais avançado entre Etapa e Status."""
+    choices = [record.get('etapa visita'), record.get('status')]
+    choices = [value for value in choices if value not in (None, '')]
+    if not choices:
+        return None
+
+    def priority(value):
+        text = norm(value)
+        if 'cancelad' in text: return 100
+        if 'concluido' in text or 'concluído' in text: return 90
+        if 'em andamento' in text: return 70
+        if 'aguardando' in text: return 50
+        if 'agendad' in text: return 30
+        return 10
+
+    return max(choices, key=priority)
+
+
+def synchronize_visit_result(record, result_source=None):
+    """Mantém Etapa Visita e Status iguais na cópia de Inconformidades."""
+    result = visit_result(result_source or record)
+    if result not in (None, ''):
+        record['etapa visita'] = result
+        record['status'] = result
+    return record
 
 
 def find_similar_visit_key(records, incoming):
@@ -730,7 +768,9 @@ def rebuild_inconformities(wb, final_records=None, final_all_records=None,
         if not category: continue
         key=(visit_key(rec), plain(category))
         if key not in seen:
-            seen.add(key); rec=rec.copy(); rec['observacoes']=category; combined.append(rec)
+            seen.add(key); rec=rec.copy(); rec['observacoes']=category
+            synchronize_visit_result(rec)
+            combined.append(rec)
 
     for day_ws in wb.worksheets:
         if plain(day_ws.title) in SPECIAL_SHEETS: continue
@@ -747,18 +787,13 @@ def rebuild_inconformities(wb, final_records=None, final_all_records=None,
             daily_reason = source_rec.get('motivo cancelamento')
             final_rec = final_index.get(final_visit_key(values))
             if final_rec is None:
-                final_rec = find_final_record(values, final_all_records or [])
+                final_rec = find_final_record(
+                    values, final_all_records or [], accept_unique_contract=True
+                )
             if final_rec:
                 # Somente a cópia enviada para Inconformidades recebe o estado
                 # final; a linha original da aba diária permanece intocada.
-                if 'agendad' in plain(values.get('etapa visita')):
-                    final_stage = final_rec.get('etapa visita') or final_rec.get('status')
-                    if final_stage not in (None, ''):
-                        values['etapa visita'] = final_stage
-                if 'agendad' in plain(values.get('status')):
-                    final_status = final_rec.get('status') or final_rec.get('etapa visita')
-                    if final_status not in (None, ''):
-                        values['status'] = final_status
+                synchronize_visit_result(values, final_rec)
                 arrival_value = final_rec.get('data visita inicio')
                 arrival = format_arrival(arrival_value)
                 values['informacoes'] = compose_information(
