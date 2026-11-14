@@ -214,7 +214,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.3.2').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.3.3').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -256,8 +256,8 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.3.2'),
-        ('Versão do documento', '1.6'),
+        ('Versão do software', '0.3.3'),
+        ('Versão do documento', '1.7'),
         ('Responsável', 'Leonardo Aguiar'),
         ('Data de emissão', '14 de novembro de 2026'),
     ]
@@ -279,7 +279,7 @@ def build():
 
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório privado.')
-    add_body(doc, 'A versão 0.3.2 prioriza as explicações preenchidas em Informações nas planilhas diárias. Justificativas de reagendamento, clima, contato e outras observações são preservadas integralmente; mensagens que contêm somente o horário de chegada continuam padronizadas.')
+    add_body(doc, 'A versão 0.3.3 aproxima a apresentação da Planilha Rank do modelo de fechamento. O painel de veículos é ordenado pelo Total Geral, o quadro de No Show aparece no topo do Rank Ugly com cabeçalho vermelho e a base de inconformidades recebe as faixas azuis alternadas.')
 
     add_heading(doc, 'Conteúdo do documento', 2)
     contents = [
@@ -302,7 +302,7 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.3.2', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.3.3', 2)
     add_bullets(doc, [
         'Menu principal com acesso às automações disponíveis.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
@@ -321,6 +321,7 @@ def build():
         'Rankings The Best, Ugly e No Show, painéis por cliente e supervisão e quatro Tabelas Dinâmicas nativas.',
         'Sincronização do resultado final em Etapa Visita e Status nas inconformidades, com prioridade para o ID do contrato.',
         'Prioridade para informações explicativas registradas nas planilhas diárias.',
+        'Apresentação do Rank com painel de veículos ordenado, No Show destacado e inconformidades em faixas azuis.',
     ])
     add_heading(doc, '1.3 Público e ambiente de uso', 2)
     add_body(doc, 'O software foi projetado para uso local em Windows, com Microsoft Excel instalado. O repositório deve permanecer privado enquanto contiver regras operacionais específicas. Arquivos com dados reais não devem ser versionados.')
@@ -420,7 +421,7 @@ def build():
     add_heading(doc, '5.4 Veículos e supervisão', 2)
     add_body(doc, 'O painel de veículos reúne cancelamentos pelo cliente, ausências da equipe, divergências ou ausência de kit, falta de integridade, veículo indisponível e reagendamento cancelado pelo cliente. O painel de supervisão usa as quatro categorias penalizadoras. Quando não existe Rank anterior ou surge um prestador novo, a supervisão fica como Não mapeado para revisão humana.')
     add_heading(doc, '5.5 Painéis dinâmicos', 2)
-    add_body(doc, 'Os quatro painéis são Tabelas Dinâmicas nativas do Excel. Os filtros permanecem disponíveis e o duplo clique em uma contagem abre os registros que formam aquele total. As bases técnicas ficam ocultas para preservar a apresentação da planilha sem impedir auditoria ou atualização.')
+    add_body(doc, 'Os quatro painéis são Tabelas Dinâmicas nativas do Excel. Os filtros permanecem disponíveis e o duplo clique em uma contagem abre os registros que formam aquele total. No Painel Veículo Indisponível, os clientes são ordenados do maior Total Geral para o menor. No Rank Ugly, o quadro de No Show fica no topo com cabeçalho vermelho. A aba Inconformidades usa cabeçalho claro e alternância entre dois tons de azul. As bases técnicas ficam ocultas para preservar a apresentação sem impedir auditoria ou atualização.')
 
     add_heading(doc, '6 Regras de dados e inconformidades', 1)
     add_heading(doc, '6.1 Identificação de datas e colunas', 2)
@@ -492,7 +493,7 @@ def build():
 
     add_heading(doc, '9 Versionamento Git e publicação', 1)
     add_heading(doc, '9.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.3.2, que preserva as informações explicativas das planilhas diárias nas inconformidades.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.3.3, que ajusta a apresentação dos relatórios da Planilha Rank.')
     add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -572,6 +573,7 @@ def build():
         ['0.3.0','1.4','14/11/2026','Leonardo Aguiar','Gerador de Planilha Rank, rankings, painéis dinâmicos e reaproveitamento da supervisão.'],
         ['0.3.1','1.5','14/11/2026','Leonardo Aguiar','Correspondência por contrato e sincronização de Etapa Visita e Status nas inconformidades.'],
         ['0.3.2','1.6','14/11/2026','Leonardo Aguiar','Prioridade para explicações registradas em Informações nas planilhas diárias.'],
+        ['0.3.3','1.7','14/11/2026','Leonardo Aguiar','Painel de veículos ordenado, No Show destacado e inconformidades com faixas azuis.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value

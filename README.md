@@ -4,7 +4,7 @@
 
 Central local de automações para rotinas operacionais.
 
-**Versão:** 0.3.2
+**Versão:** 0.3.3
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automações disponíveis
@@ -39,6 +39,9 @@ Central local de automações para rotinas operacionais.
 - Permite selecionar uma Planilha Rank anterior para reaproveitar o cadastro de prestadores por supervisor.
 - Indica prestadores novos como `Não mapeado`, evitando atribuições automáticas incorretas.
 - Normaliza espaços e pequenas variações nos nomes para não dividir o mesmo prestador em duas linhas.
+- Ordena o Painel Veículo Indisponível pelo `Total Geral`, do maior para o menor.
+- Exibe o quadro de `No Show` no topo do `Rank Ugly`, com cabeçalho vermelho.
+- Aplica na aba `Inconformidades` o cabeçalho claro e as faixas azuis alternadas do modelo.
 
 ## Requisitos
 
