@@ -59,13 +59,18 @@ class AutoPlanHub(tk.Tk):
                    command=self.open_consolidator).grid(row=0, column=1, rowspan=2, padx=(25, 0))
         card.columnconfigure(0, weight=1)
 
-        future = tk.Frame(content, bg='#F7F9FC', highlightbackground='#D8E0EA',
-                          highlightthickness=1, padx=22, pady=17)
-        future.pack(fill='x', anchor='n', pady=(14, 0))
-        tk.Label(future, text='Novas automações', bg='#F7F9FC', fg='#6B7280',
-                 font=('Segoe UI', 12, 'bold')).pack(anchor='w')
-        tk.Label(future, text='Este espaço ficará disponível para os próximos módulos.',
-                 bg='#F7F9FC', fg='#6B7280', font=('Segoe UI', 10)).pack(anchor='w', pady=(4, 0))
+        rank_card = tk.Frame(content, bg='white', highlightbackground='#C9D5E3',
+                             highlightthickness=1, padx=22, pady=20)
+        rank_card.pack(fill='x', anchor='n', pady=(14, 0))
+        tk.Label(rank_card, text='Gerador de Planilha Rank', bg='white', fg='#17365D',
+                 font=('Segoe UI', 15, 'bold')).grid(row=0, column=0, sticky='w')
+        tk.Label(rank_card,
+                 text='Gera rankings, ocorrências, análises por cliente e painéis de supervisão.',
+                 bg='white', fg='#4B5563', font=('Segoe UI', 10),
+                 wraplength=600, justify='left').grid(row=1, column=0, sticky='w', pady=(5, 14))
+        ttk.Button(rank_card, text='Abrir automação', style='Hub.TButton',
+                   command=self.open_rank).grid(row=0, column=1, rowspan=2, padx=(25, 0))
+        rank_card.columnconfigure(0, weight=1)
 
         footer = tk.Frame(self, bg='#E3EAF2', padx=20, pady=9)
         footer.pack(fill='x', side='bottom')
@@ -83,6 +88,18 @@ class AutoPlanHub(tk.Tk):
             return
         try:
             subprocess.Popen([str(python_gui_executable()), '-m', 'automacoes.planilha_mae.ui'], cwd=str(APP_DIR))
+        except Exception as exc:
+            messagebox.showerror('Não foi possível abrir', f'Falha ao abrir a automação:\n{exc}')
+
+    def open_rank(self):
+        module = APP_DIR / 'automacoes' / 'planilha_rank' / 'ui.py'
+        if not module.is_file():
+            messagebox.showerror('Automação não encontrada',
+                                 'O módulo do Gerador de Planilha Rank não foi encontrado.')
+            return
+        try:
+            subprocess.Popen([str(python_gui_executable()), '-m', 'automacoes.planilha_rank.ui'],
+                             cwd=str(APP_DIR))
         except Exception as exc:
             messagebox.showerror('Não foi possível abrir', f'Falha ao abrir a automação:\n{exc}')
 
