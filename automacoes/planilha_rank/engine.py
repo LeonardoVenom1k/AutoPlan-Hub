@@ -139,34 +139,48 @@ def infer_period_from_mother(path):
 
 
 def load_supervision_mapping(previous_rank, report=None):
-    """Reaproveita Prestador -> Supervisão de uma Planilha Rank anterior."""
+    """Reaproveita Técnico -> Supervisão e prestadores não ambíguos do Rank anterior."""
     if not previous_rank:
         return {}
     workbook = load_workbook(previous_rank, data_only=True, read_only=True, keep_links=False)
     mapping = {}
     conflicts = set()
+    providers = defaultdict(set)
     try:
         sheet = next((ws for ws in workbook.worksheets
                       if mother_engine.plain(ws.title) == 'base supervisao'), None)
         if sheet is None:
             raise ValueError('A Planilha Rank anterior não contém a aba Base Supervisão.')
         for record in _read_sheet(sheet):
+            technician = record.get('tecnico')
             provider = record.get('prestador de servico do tecnico')
             supervisor = record.get('supervisao')
-            if provider in (None, '') or supervisor in (None, ''):
+            if supervisor in (None, '', 'Não mapeado'):
                 continue
-            key = mother_engine.plain(provider)
-            old = mapping.get(key)
-            if old and mother_engine.plain(old) != mother_engine.plain(supervisor):
-                conflicts.add(str(provider))
-                continue
-            mapping[key] = str(supervisor).strip()
+            supervisor = str(supervisor).strip()
+            if technician not in (None, ''):
+                key = f'tecnico::{mother_engine.plain(technician)}'
+                old = mapping.get(key)
+                if old and mother_engine.plain(old) != mother_engine.plain(supervisor):
+                    conflicts.add(str(technician))
+                else:
+                    mapping[key] = supervisor
+            if provider not in (None, ''):
+                providers[mother_engine.plain(provider)].add(supervisor)
+        for provider, supervisors in providers.items():
+            if len(supervisors) == 1:
+                mapping[f'prestador::{provider}'] = next(iter(supervisors))
     finally:
         workbook.close()
     if report is not None:
-        report.append(f'Mapeamento de supervisão reaproveitado: {len(mapping)} prestador(es).')
+        technicians = sum(key.startswith('tecnico::') for key in mapping)
+        providers_count = sum(key.startswith('prestador::') for key in mapping)
+        report.append(
+            f'Mapeamento de supervisão reaproveitado: {technicians} técnico(s) e '
+            f'{providers_count} prestador(es) sem ambiguidade.'
+        )
         if conflicts:
-            report.append(f'AVISO: {len(conflicts)} prestador(es) tinham supervisões conflitantes; foi mantido o primeiro valor.')
+            report.append(f'AVISO: {len(conflicts)} técnico(s) tinham supervisões conflitantes; foi mantido o primeiro valor.')
     return mapping
 
 
@@ -245,8 +259,13 @@ def build_supervision_base(inconformities, mapping):
             continue
         item = dict(record)
         item['observacoes'] = category
-        provider = item.get('prestador de servico do tecnico')
-        item['supervisao'] = mapping.get(mother_engine.plain(provider), 'Não mapeado')
+        technician = mother_engine.plain(item.get('tecnico'))
+        provider = mother_engine.plain(item.get('prestador de servico do tecnico'))
+        item['supervisao'] = (
+            mapping.get(f'tecnico::{technician}')
+            or mapping.get(f'prestador::{provider}')
+            or 'Não mapeado'
+        )
         result.append(item)
     return result
 

@@ -72,7 +72,19 @@ class PlanilhaRankTests(unittest.TestCase):
             sheet.append(values)
             workbook.save(path)
             mapping = engine.load_supervision_mapping(path)
-            self.assertEqual(mapping['prestador a'], 'Supervisora A')
+            self.assertEqual(mapping['tecnico::tecnico'], 'Supervisora A')
+            self.assertEqual(mapping['prestador::prestador a'], 'Supervisora A')
+
+    def test_supervisao_prioriza_tecnico_quando_prestador_tem_varios(self):
+        mapping = {
+            'tecnico::tecnico a': 'Supervisora A',
+            'tecnico::tecnico b': 'Supervisor B',
+        }
+        base = engine.build_supervision_base([
+            record(1, 'Prestador Único', 'Atrasado - Técnico não informou',
+                   'Atrasado - Técnico não informou') | {'tecnico': 'Técnico B'},
+        ], mapping)
+        self.assertEqual(base[0]['supervisao'], 'Supervisor B')
 
     def test_cria_estrutura_com_abas_e_tabelas(self):
         with tempfile.TemporaryDirectory() as folder:
