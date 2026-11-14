@@ -265,8 +265,30 @@ def format_arrival(value):
     return None
 
 
+def is_descriptive_information(value):
+    """Distingue uma justificativa diária de uma mensagem simples de chegada."""
+    if value in (None, ''):
+        return False
+    text = plain(value)
+    if not format_arrival(value):
+        return True
+    arrival_only = re.fullmatch(
+        r'(?:(?:o )?tecnico )?chegou\s+(?:as\s+)?'
+        r'(?:[01]?\d|2[0-3])\s*(?::|h|horas?\s+e)\s*[0-5]?\d'
+        r'(?:\s*minutos?)?[.!]?',
+        text,
+    ) or re.fullmatch(
+        r'(?:[01]?\d|2[0-3])\s*(?::|h)\s*[0-5]?\d[.!]?',
+        text,
+    )
+    return arrival_only is None
+
+
 def compose_information(existing=None, arrival=None, *reasons):
-    """Usa o motivo como prioridade; sem motivo, padroniza o horário."""
+    """Prioriza uma explicação diária; depois motivo e horário padronizado."""
+    if is_descriptive_information(existing):
+        return str(existing).strip()
+
     reason_parts=[]
     for reason in reasons:
         if reason in (None, ''):

@@ -182,6 +182,30 @@ class InconformidadesTests(unittest.TestCase):
             'Cancelado pela Maxtrack',
         )
 
+    def test_informacao_explicativa_diaria_tem_prioridade(self):
+        examples = [
+            'Técnico não foi no horário e foi reagendado para as 16h',
+            'Chegou às 08:28 - Chuva',
+            'Não informou da chegada do técnico, depois de muitas tentativas informou que o cliente pediu para reagendar',
+        ]
+        for information in examples:
+            with self.subTest(information=information):
+                self.assertEqual(
+                    engine.compose_information(
+                        information,
+                        datetime(2026, 10, 6, 8, 28),
+                        'Cancelado pela Maxtrack',
+                    ),
+                    information,
+                )
+
+    def test_chegada_simples_continua_padronizada(self):
+        self.assertFalse(engine.is_descriptive_information('Chegou às 9:33'))
+        self.assertEqual(
+            engine.compose_information('Chegou às 9:33'),
+            'Chegou às 09h33',
+        )
+
     def test_formata_colunas_de_data_e_hora(self):
         workbook = Workbook()
         sheet = workbook.active
