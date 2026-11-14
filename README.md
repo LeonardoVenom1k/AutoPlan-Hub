@@ -4,7 +4,7 @@
 
 Central local de automações para rotinas operacionais.
 
-**Versão:** 0.3.4
+**Versão:** 0.4.0
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automações disponíveis
@@ -44,6 +44,10 @@ Central local de automações para rotinas operacionais.
 - Mantém a aba `Inconformidades` com o mesmo padrão visual usado na Planilha Mãe.
 - Aplica grades visíveis nos painéis de supervisão e de veículo indisponível.
 - Identifica a supervisão pelo campo `Técnico`, usando o prestador apenas quando seu vínculo não é ambíguo.
+- Exibe no andamento e no relatório cada associação `Técnico → Supervisão`, sua fonte, os vínculos carregados e quantas ocorrências foram ou não mapeadas.
+- Organiza o Painel Supervisão na hierarquia `Supervisão → Prestador`; o técnico é usado apenas para localizar o supervisor correto.
+- Gera relatórios divididos em identificação, arquivos utilizados, resultados, detalhamento do processamento e checklist de revisão.
+- Ao concluir qualquer geração ou atualização, avisa que a planilha deve ser revisada antes de ser entregue ou usada como versão oficial.
 
 ## Requisitos
 

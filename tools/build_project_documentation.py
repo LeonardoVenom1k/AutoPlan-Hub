@@ -214,7 +214,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.3.4').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.4.0').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -256,8 +256,8 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.3.4'),
-        ('Versão do documento', '1.8'),
+        ('Versão do software', '0.4.0'),
+        ('Versão do documento', '2.0'),
         ('Responsável', 'Leonardo Aguiar'),
         ('Data de emissão', '14 de novembro de 2026'),
     ]
@@ -279,7 +279,7 @@ def build():
 
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório privado.')
-    add_body(doc, 'A versão 0.3.4 refina a apresentação e a classificação da Planilha Rank. O quadro de No Show aparece abaixo da tabela principal do Rank Ugly, a base de inconformidades segue o mesmo padrão da Planilha Mãe, os painéis exibem grades completas e a supervisão passa a ser identificada prioritariamente pelo técnico.')
+    add_body(doc, 'A versão 0.4.0 torna o processamento auditável e reforça a conferência humana. Os relatórios da Planilha Mãe e da Planilha Rank passam a explicar os arquivos utilizados, os resultados, as decisões do processamento e o que deve ser revisado antes da entrega.')
 
     add_heading(doc, 'Conteúdo do documento', 2)
     contents = [
@@ -302,7 +302,7 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.3.4', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.4.0', 2)
     add_bullets(doc, [
         'Menu principal com acesso às automações disponíveis.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
@@ -422,7 +422,10 @@ def build():
     add_body(doc, 'O painel de veículos reúne cancelamentos pelo cliente, ausências da equipe, divergências ou ausência de kit, falta de integridade, veículo indisponível e reagendamento cancelado pelo cliente. O painel de supervisão usa as quatro categorias penalizadoras. Quando não existe Rank anterior ou surge um prestador novo, a supervisão fica como Não mapeado para revisão humana.')
     add_heading(doc, '5.5 Painéis dinâmicos', 2)
     add_body(doc, 'Os quatro painéis são Tabelas Dinâmicas nativas do Excel. Os filtros permanecem disponíveis e o duplo clique em uma contagem abre os registros que formam aquele total. No Painel Veículo Indisponível, os clientes são ordenados do maior Total Geral para o menor. Os painéis de supervisão e de veículo indisponível exibem grades completas. No Rank Ugly, o quadro de No Show fica abaixo da tabela principal com cabeçalho vermelho. A aba Inconformidades segue o mesmo padrão visual da Planilha Mãe. As bases técnicas ficam ocultas para preservar a apresentação sem impedir auditoria ou atualização.')
-    add_body(doc, 'No Painel Supervisão, o vínculo é reaproveitado pelo campo Técnico. O prestador é usado somente como alternativa quando todos os seus registros conhecidos pertencem à mesma supervisão, evitando classificar incorretamente empresas que possuem técnicos de equipes diferentes.')
+    add_body(doc, 'No Painel Supervisão, o vínculo é reaproveitado pelo campo Técnico. O prestador é usado somente como alternativa quando todos os seus registros conhecidos pertencem à mesma supervisão, evitando classificar incorretamente empresas que possuem técnicos de equipes diferentes. A Tabela Dinâmica apresenta apenas a hierarquia Supervisão e Prestador; o técnico é uma chave interna de associação e não aparece como terceiro nível do painel.')
+    add_body(doc, 'Durante o processamento, o log mostra a leitura do Rank anterior e cada associação no formato Técnico para Supervisão, indicando se o vínculo veio do próprio técnico ou de um prestador sem ambiguidade. Também apresenta os totais carregados, mapeados e não mapeados. Quando nenhum Rank anterior é selecionado, a tela exibe um aviso explícito. O relatório final registra a mesma auditoria para facilitar a conferência posterior.')
+    add_heading(doc, '5.6 Relatórios e revisão obrigatória', 2)
+    add_body(doc, 'Os relatórios são organizados em seções de identificação, arquivos utilizados, resultado resumido, detalhamento do processamento, método de mapeamento quando aplicável e checklist de revisão. Ao finalizar qualquer geração ou atualização, o AutoPlan Hub também exibe um aviso para que o usuário revise dados ausentes, conflitos, totais, associações e detalhes antes de entregar, enviar ou considerar a planilha como versão oficial.')
 
     add_heading(doc, '6 Regras de dados e inconformidades', 1)
     add_heading(doc, '6.1 Identificação de datas e colunas', 2)
@@ -494,7 +497,7 @@ def build():
 
     add_heading(doc, '9 Versionamento Git e publicação', 1)
     add_heading(doc, '9.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.3.4, que corrige a posição do quadro de No Show e acrescenta grades aos painéis da Planilha Rank.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.4.0, que amplia os relatórios de auditoria e exige revisão antes da entrega das planilhas.')
     add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -576,6 +579,8 @@ def build():
         ['0.3.2','1.6','14/11/2026','Leonardo Aguiar','Prioridade para explicações registradas em Informações nas planilhas diárias.'],
         ['0.3.3','1.7','14/11/2026','Leonardo Aguiar','Painel de veículos ordenado, No Show destacado e inconformidades com faixas azuis.'],
         ['0.3.4','1.8','14/11/2026','Leonardo Aguiar','No Show reposicionado, grades nos painéis e supervisão identificada pelo técnico.'],
+        ['0.3.5','1.9','14/11/2026','Leonardo Aguiar','Log detalha o mapeamento e o painel organiza Supervisão e Prestador.'],
+        ['0.4.0','2.0','14/11/2026','Leonardo Aguiar','Relatórios completos e aviso obrigatório de revisão antes da entrega.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value
