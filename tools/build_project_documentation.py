@@ -214,7 +214,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.2.2').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.3.0').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -256,10 +256,10 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.2.2'),
-        ('Versão do documento', '1.3'),
+        ('Versão do software', '0.3.0'),
+        ('Versão do documento', '1.4'),
         ('Responsável', 'Leonardo Aguiar'),
-        ('Data de emissão', '9 de novembro de 2026'),
+        ('Data de emissão', '14 de novembro de 2026'),
     ]
     for row, values in zip(cover.rows, cover_data):
         row.cells[0].text, row.cells[1].text = values
@@ -279,15 +279,16 @@ def build():
 
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório privado.')
-    add_body(doc, 'A versão 0.2.2 melhora a comparação entre planilhas diárias e o relatório final. Mudanças de horário, técnico ou prestador não impedem a localização da visita. Quando existe motivo, Informações mantém somente o motivo; datas e horários seguem o padrão DD/MM/AAAA HH:MM.')
+    add_body(doc, 'A versão 0.3.0 acrescenta o Gerador de Planilha Rank. A nova automação usa a Planilha Mãe como fonte, monta rankings e bases técnicas, gera quatro painéis dinâmicos e pode reaproveitar o cadastro de supervisão de um fechamento anterior.')
 
     add_heading(doc, 'Conteúdo do documento', 2)
     contents = [
         ('1', 'Visão geral do produto'), ('2', 'Arquitetura e organização do código'),
         ('3', 'Instalação e execução'), ('4', 'Consolidador de Planilha Mãe'),
-        ('5', 'Regras de dados e inconformidades'), ('6', 'Segurança privacidade e recuperação'),
-        ('7', 'Testes e controle de qualidade'), ('8', 'Versionamento Git e publicação'),
-        ('9', 'Manutenção e evolução'), ('10', 'Histórico de versões'),
+        ('5', 'Gerador de Planilha Rank'), ('6', 'Regras de dados e inconformidades'),
+        ('7', 'Segurança privacidade e recuperação'), ('8', 'Testes e controle de qualidade'),
+        ('9', 'Versionamento Git e publicação'), ('10', 'Manutenção e evolução'),
+        ('11', 'Histórico de versões'),
     ]
     table = doc.add_table(rows=1, cols=2)
     table.rows[0].cells[0].text = 'Seção'
@@ -301,7 +302,7 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.2.2', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.3.0', 2)
     add_bullets(doc, [
         'Menu principal com acesso às automações disponíveis.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
@@ -316,6 +317,8 @@ def build():
         'Geração de Painel por Tabela Dinâmica com filtro e detalhamento por duplo clique.',
         'Backup automático antes da atualização de um arquivo existente.',
         'Processamento em segundo plano para manter a interface responsiva.',
+        'Gerador de Planilha Rank em janela independente, alimentado pela Planilha Mãe.',
+        'Rankings The Best, Ugly e No Show, painéis por cliente e supervisão e quatro Tabelas Dinâmicas nativas.',
     ])
     add_heading(doc, '1.3 Público e ambiente de uso', 2)
     add_body(doc, 'O software foi projetado para uso local em Windows, com Microsoft Excel instalado. O repositório deve permanecer privado enquanto contiver regras operacionais específicas. Arquivos com dados reais não devem ser versionados.')
@@ -329,6 +332,9 @@ def build():
         ('automacoes/planilha_mae/service.py', 'Validação, criação, atualização, backup e relatório de processamento.'),
         ('automacoes/planilha_mae/engine.py', 'Leitura, normalização, comparação, escrita do Excel e Tabela Dinâmica.'),
         ('automacoes/planilha_mae/theme.py', 'Cores e estilos visuais do módulo.'),
+        ('automacoes/planilha_rank/ui.py', 'Tela do Gerador de Rank, seleção da origem, período e progresso.'),
+        ('automacoes/planilha_rank/service.py', 'Validação, destino e relatório da geração do Rank.'),
+        ('automacoes/planilha_rank/engine.py', 'Bases, classificações, planilhas formatadas e quatro Tabelas Dinâmicas.'),
         ('assets/', 'Ícones PNG e ICO do AutoPlan Hub.'),
         ('requirements.txt', 'Dependências necessárias para executar o projeto.'),
         ('.gitignore', 'Bloqueio de planilhas, backups, relatórios e arquivos temporários no Git.'),
@@ -395,12 +401,31 @@ def build():
         'Relatório de conflitos, atualizações, avisos e backup.',
     ])
 
-    add_heading(doc, '5 Regras de dados e inconformidades', 1)
-    add_heading(doc, '5.1 Identificação de datas e colunas', 2)
+    add_heading(doc, '5 Gerador de Planilha Rank', 1)
+    add_heading(doc, '5.1 Entradas e resultado', 2)
+    add_body(doc, 'A Planilha Mãe concluída é a entrada obrigatória. Opcionalmente, o usuário pode selecionar uma Planilha Rank anterior para reaproveitar a relação entre prestadores e supervisores. O resultado é salvo com o nome Planilha Rank - Mês Ano - Logística e EAB - Fechamento.xlsx na pasta escolhida.')
+    add_heading(doc, '5.2 Estrutura gerada', 2)
+    add_bullets(doc, [
+        'Painel Inconformidades e sua base detalhada.',
+        'Base Rank oculta e Painel Rank oculto, usados pelos cálculos do fechamento.',
+        'Rank The Best com os dez prestadores de maior volume sem ocorrências penalizadoras.',
+        'Rank Ugly com prestadores que possuem ocorrências e uma relação separada de No Show.',
+        'Base Veículo Indisponível oculta e painel por cliente e categoria.',
+        'Painel Supervisão e Base Supervisão oculta, com prestadores agrupados por responsável.',
+    ])
+    add_heading(doc, '5.3 Critérios dos rankings', 2)
+    add_body(doc, 'A Base Rank combina as visitas concluídas com Atrasado - Técnico informou, Atrasado - Técnico não informou, Atraso Penalizado e No Show. The Best considera somente prestadores sem essas ocorrências e ordena pelo volume concluído. Ugly ordena prestadores com ocorrências pela quantidade total. No Show permanece em uma tabela própria. Espaços excedentes e variações simples são normalizados para impedir a separação indevida do mesmo prestador.')
+    add_heading(doc, '5.4 Veículos e supervisão', 2)
+    add_body(doc, 'O painel de veículos reúne cancelamentos pelo cliente, ausências da equipe, divergências ou ausência de kit, falta de integridade, veículo indisponível e reagendamento cancelado pelo cliente. O painel de supervisão usa as quatro categorias penalizadoras. Quando não existe Rank anterior ou surge um prestador novo, a supervisão fica como Não mapeado para revisão humana.')
+    add_heading(doc, '5.5 Painéis dinâmicos', 2)
+    add_body(doc, 'Os quatro painéis são Tabelas Dinâmicas nativas do Excel. Os filtros permanecem disponíveis e o duplo clique em uma contagem abre os registros que formam aquele total. As bases técnicas ficam ocultas para preservar a apresentação da planilha sem impedir auditoria ou atualização.')
+
+    add_heading(doc, '6 Regras de dados e inconformidades', 1)
+    add_heading(doc, '6.1 Identificação de datas e colunas', 2)
     add_body(doc, 'O motor aceita nomes de arquivos com datas nos formatos DD-MM, DD-MM-AA e DD-MM-AAAA. Os cabeçalhos são normalizados para absorver diferenças como Tipo de Visita e Tipo visita, Etapa da Visita e Etapa Visita, além de caracteres acentuados danificados por exportações.')
-    add_heading(doc, '5.2 Chave de visita', 2)
+    add_heading(doc, '6.2 Chave de visita', 2)
     add_body(doc, 'O contrato não é usado isoladamente para eliminar duplicidades. Entre as planilhas diárias, a comparação procura o mesmo contrato no mesmo dia e usa placa, tipo de visita e proximidade do horário para escolher o registro correto. Ajustes de até quatro horas são aceitos; diferenças maiores permanecem como visitas distintas para não misturar turnos. Técnico e prestador podem mudar durante o atendimento sem criar uma nova visita.')
-    add_heading(doc, '5.3 Categorias oficiais', 2)
+    add_heading(doc, '6.3 Categorias oficiais', 2)
     categories = [
         ('Reagendamento', 'Lançado pelo supervisor'), ('Reagendamento', 'Cancelado pelo cliente'),
         ('Reagendamento', 'Sem tempo hábil'), ('Reagendamento', 'Veículo Indisponível'),
@@ -419,17 +444,17 @@ def build():
     for group, name in categories:
         cells=cat.add_row().cells; cells[0].text=group; cells[1].text=name
     style_table(cat, [Cm(4.2), Cm(11.3)])
-    add_heading(doc, '5.4 Painel e detalhamento', 2)
+    add_heading(doc, '6.4 Painel e detalhamento', 2)
     add_body(doc, 'O Painel é uma Tabela Dinâmica nativa do Excel, não uma tabela estática. O filtro é disponibilizado no campo Rótulos de Linha. O duplo clique em uma contagem cria uma nova aba de detalhes com os registros que compõem aquele total.')
-    add_heading(doc, '5.5 Resultado e chegada das visitas atrasadas', 2)
+    add_heading(doc, '6.5 Resultado e chegada das visitas atrasadas', 2)
     add_body(doc, 'Para as categorias Atrasado - Técnico informou e Atrasado - Técnico não informou, o motor procura o mesmo contrato no mesmo dia e seleciona no relatório final o horário mais próximo, usando placa e tipo de visita como confirmação. A tolerância de até quatro horas cobre remarcações sem misturar visitas de turnos diferentes. Técnico e prestador não fazem parte da chave. Se existir motivo na planilha final ou diária, Informações mantém somente o motivo. Sem motivo, o horário é apresentado como Chegou às 12h35. A linha original da aba diária não é modificada.')
 
-    add_heading(doc, '6 Segurança privacidade e recuperação', 1)
-    add_heading(doc, '6.1 Proteção dos dados', 2)
+    add_heading(doc, '7 Segurança privacidade e recuperação', 1)
+    add_heading(doc, '7.1 Proteção dos dados', 2)
     add_body(doc, 'O projeto deve processar os arquivos somente no computador autorizado. Planilhas, relatórios, backups e dados operacionais não devem ser enviados ao repositório. O arquivo .gitignore bloqueia extensões e pastas de dados mais comuns, mas o responsável deve conferir cada commit antes da publicação.')
-    add_heading(doc, '6.2 Backup', 2)
+    add_heading(doc, '7.2 Backup', 2)
     add_body(doc, 'No modo Atualizar, uma cópia é criada antes da gravação. O padrão do nome é nome_original_backup_AAAAMMDD_HHMMSS.extensão. O backup deve ser mantido até a validação do arquivo atualizado.')
-    add_heading(doc, '6.3 Recuperação', 2)
+    add_heading(doc, '7.3 Recuperação', 2)
     add_numbered(doc, [
         'Fechar a Planilha Mãe atualizada no Excel.',
         'Localizar o backup criado na mesma pasta.',
@@ -437,7 +462,7 @@ def build():
         'Renomear ou copiar o backup para o nome oficial somente após confirmar o conteúdo.',
     ])
 
-    add_heading(doc, '7 Testes e controle de qualidade', 1)
+    add_heading(doc, '8 Testes e controle de qualidade', 1)
     tests = [
         ('Sintaxe Python', 'Compilação dos módulos sem erros.'),
         ('Interface', 'Abertura centralizada do menu e da automação; alternância entre Criar e Atualizar.'),
@@ -446,13 +471,14 @@ def build():
         ('Dados duplicados', 'Visitas repetidas são comparadas pela chave composta.'),
         ('Atrasos', 'Resultado e horário são atualizados em Inconformidades sem modificar a aba diária.'),
         ('Privacidade', 'Arquivos reais, backups e relatórios permanecem fora do Git.'),
+        ('Planilha Rank', 'Dez abas na ordem prevista, bases técnicas ocultas, quatro painéis dinâmicos e rankings consistentes.'),
     ]
     table=doc.add_table(rows=1,cols=2)
     table.rows[0].cells[0].text='Verificação'; table.rows[0].cells[1].text='Critério de aceite'
     for name, criterion in tests:
         cells=table.add_row().cells; cells[0].text=name; cells[1].text=criterion
     style_table(table,[Cm(5.5),Cm(10)])
-    add_heading(doc, '7.1 Lista de validação antes do uso', 2)
+    add_heading(doc, '8.1 Lista de validação antes do uso', 2)
     add_bullets(doc, [
         'Confirmar o mês e o ano selecionados.',
         'Confirmar que todos os arquivos diários foram incluídos.',
@@ -462,10 +488,10 @@ def build():
         'Manter o backup até a aprovação do resultado.',
     ])
 
-    add_heading(doc, '8 Versionamento Git e publicação', 1)
-    add_heading(doc, '8.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.2.2, com comparação tolerante a mudanças operacionais e prioridade correta das informações.')
-    add_heading(doc, '8.2 Convenção de commits', 2)
+    add_heading(doc, '9 Versionamento Git e publicação', 1)
+    add_heading(doc, '9.1 Modelo de versão', 2)
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.3.0, que acrescenta o Gerador de Planilha Rank sem alterar o funcionamento do Consolidador.')
+    add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
         ('docs:', 'Documentação.'), ('chore:', 'Configuração, organização ou manutenção sem mudança funcional.'),
@@ -477,7 +503,7 @@ def build():
     for prefix,use in commits:
         cells=table.add_row().cells; cells[0].text=prefix; cells[1].text=use
     style_table(table,[Cm(3.4),Cm(12.1)])
-    add_heading(doc, '8.3 Histórico inicial de commits', 2)
+    add_heading(doc, '9.3 Histórico inicial de commits', 2)
     history = [
         ('dc16b21', 'chore: configura arquivos ignorados do projeto'),
         ('18a5489', 'feat: cria AutoPlan Hub e consolidador de planilha mãe'),
@@ -486,17 +512,20 @@ def build():
         ('9ffaa43', 'docs: adiciona documentação técnica e histórico de versões'),
         ('c887035', 'feat: atualiza atrasos com dados do relatório final'),
         ('eeb4ad7', 'docs: documenta atualização das inconformidades'),
+        ('47ce450', 'feat: cria motor da planilha rank'),
+        ('0b90908', 'feat: adiciona gerador de rank ao menu'),
+        ('5f5eedf', 'fix: corrige filtros e cabeçalhos do rank'),
     ]
     table=doc.add_table(rows=1,cols=2)
     table.rows[0].cells[0].text='Commit'; table.rows[0].cells[1].text='Descrição'
     for commit,description in history:
         cells=table.add_row().cells; cells[0].text=commit; cells[1].text=description
     style_table(table,[Cm(3.4),Cm(12.1)])
-    add_heading(doc, '8.4 Publicação privada', 2)
+    add_heading(doc, '9.4 Publicação privada', 2)
     add_body(doc, 'Antes do primeiro envio ao GitHub, o repositório deve ser criado como privado. O comando git status deve ser revisado para confirmar que não existem planilhas, relatórios, backups ou arquivos temporários preparados para commit.')
 
-    add_heading(doc, '9 Manutenção e evolução', 1)
-    add_heading(doc, '9.1 Onde alterar cada tipo de comportamento', 2)
+    add_heading(doc, '10 Manutenção e evolução', 1)
+    add_heading(doc, '10.1 Onde alterar cada tipo de comportamento', 2)
     maintenance = [
         ('Visual, campos e mensagens', 'ui.py e theme.py'),
         ('Versão, autor, nome e ícones', 'app_info.py'),
@@ -510,7 +539,7 @@ def build():
     for change,location in maintenance:
         cells=table.add_row().cells; cells[0].text=change; cells[1].text=location
     style_table(table,[Cm(7.5),Cm(8)])
-    add_heading(doc, '9.2 Processo recomendado para uma alteração', 2)
+    add_heading(doc, '10.2 Processo recomendado para uma alteração', 2)
     add_numbered(doc, [
         'Criar uma branch com nome curto e descritivo.',
         'Alterar apenas o módulo responsável pelo comportamento.',
@@ -519,16 +548,17 @@ def build():
         'Atualizar este documento e o README quando a mudança afetar o uso ou a arquitetura.',
         'Atualizar APP_VERSION conforme o impacto e criar um commit convencional.',
     ])
-    add_heading(doc, '9.3 Próximas evoluções sugeridas', 2)
+    add_heading(doc, '10.3 Próximas evoluções sugeridas', 2)
     add_bullets(doc, [
         'Empacotamento em executável Windows com ícone próprio.',
         'Instalador e mecanismo de atualização controlada.',
         'Tela de configurações para categorias e mapeamentos.',
-        'Testes automatizados para datas, cabeçalhos, duplicidades e categorias.',
+        'Tela de manutenção do cadastro de supervisão sem depender de uma planilha anterior.',
         'Novos módulos no menu do AutoPlan Hub.',
     ])
 
-    add_heading(doc, '10 Histórico de versões', 1)
+    doc.add_page_break()
+    add_heading(doc, '11 Histórico de versões', 1)
     versions = doc.add_table(rows=1, cols=5)
     for i, value in enumerate(['Software', 'Documento', 'Data', 'Responsável', 'Resumo']):
         versions.rows[0].cells[i].text=value
@@ -537,15 +567,18 @@ def build():
         ['0.2.0','1.1','09/11/2026','Leonardo Aguiar','Resultado final e horário de chegada dos atrasos atualizados somente em Inconformidades.'],
         ['0.2.1','1.2','09/11/2026','Leonardo Aguiar','Padronização de horários, motivos em Informações e abertura mais robusta do Excel.'],
         ['0.2.2','1.3','09/11/2026','Leonardo Aguiar','Comparação por dia e horário próximo, motivo prioritário e datas padronizadas.'],
+        ['0.3.0','1.4','14/11/2026','Leonardo Aguiar','Gerador de Planilha Rank, rankings, painéis dinâmicos e reaproveitamento da supervisão.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value
     style_table(versions,[Cm(1.8),Cm(2.4),Cm(2.4),Cm(3.6),Cm(5.3)])
-    add_heading(doc, '10.1 Regra de atualização deste documento', 2)
+    add_heading(doc, '11.1 Regra de atualização deste documento', 2)
     add_body(doc, 'Toda versão funcional que alterar o comportamento, a interface, a arquitetura, as dependências ou as regras de dados deve gerar uma nova linha no histórico. Correções apenas textuais podem incrementar somente a versão do documento.')
 
     doc.add_page_break()
-    add_heading(doc, 'Anexo A Checklist de liberação', 1)
+    annex_heading = add_heading(doc, 'Anexo A Checklist de liberação', 1)
+    annex_heading.paragraph_format.keep_with_next = False
+    annex_heading.paragraph_format.space_after = Pt(14)
     checklist = [
         'Versão atualizada em app_info.py.', 'README e documentação revisados.',
         'Módulos compilados sem erro.', 'Teste com dados fictícios concluído.',
@@ -555,7 +588,9 @@ def build():
     ]
     for item in checklist:
         p=doc.add_paragraph()
-        p.add_run('☐  ').font.size=Pt(12)
+        p.paragraph_format.space_after = Pt(8)
+        p.paragraph_format.keep_together = True
+        p.add_run('□  ').font.size=Pt(12)
         p.add_run(item)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

@@ -4,10 +4,10 @@
 
 Central local de automações para rotinas operacionais.
 
-**Versão:** 0.2.2  
+**Versão:** 0.3.0
 **Desenvolvido por:** Leonardo Aguiar
 
-## Automação disponível
+## Automações disponíveis
 
 ### Consolidador de Planilha Mãe
 
@@ -25,6 +25,17 @@ Central local de automações para rotinas operacionais.
 - Cria um Painel com Tabela Dinâmica nativa do Excel.
 - Permite abrir os detalhes das contagens com duplo clique.
 - Cria backup antes de atualizar uma Planilha Mãe existente.
+
+### Gerador de Planilha Rank
+
+- Usa uma Planilha Mãe pronta como fonte da análise mensal.
+- Reproduz a estrutura da planilha de fechamento com dez abas e bases técnicas ocultas.
+- Gera os rankings `The Best`, `Ugly` e a relação separada de `No Show`.
+- Consolida os painéis de inconformidades, veículos indisponíveis e supervisão.
+- Cria quatro Tabelas Dinâmicas nativas do Excel, com filtros e detalhamento por duplo clique.
+- Permite selecionar uma Planilha Rank anterior para reaproveitar o cadastro de prestadores por supervisor.
+- Indica prestadores novos como `Não mapeado`, evitando atribuições automáticas incorretas.
+- Normaliza espaços e pequenas variações nos nomes para não dividir o mesmo prestador em duas linhas.
 
 ## Requisitos
 
@@ -50,11 +61,15 @@ Também é possível abrir pelo arquivo `Abrir AutoPlan Hub.bat`.
 
 ```text
 automacoes/
-└── planilha_mae/
-    ├── engine.py   # regras de leitura, comparação e geração do Excel
-    ├── service.py  # criação, atualização, backup e relatório
-    ├── theme.py    # cores e estilos da interface
-    └── ui.py       # tela do consolidador
+├── planilha_mae/
+│   ├── engine.py   # regras de leitura, comparação e geração do Excel
+│   ├── service.py  # criação, atualização, backup e relatório
+│   ├── theme.py    # cores e estilos da interface
+│   └── ui.py       # tela do consolidador
+└── planilha_rank/
+    ├── engine.py   # bases, rankings, formatação e Tabelas Dinâmicas
+    ├── service.py  # validação, destino e relatório de processamento
+    └── ui.py       # tela independente do gerador de Rank
 ```
 
 ## Privacidade
