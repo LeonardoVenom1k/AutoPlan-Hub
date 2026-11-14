@@ -36,6 +36,10 @@ VEHICLE_CATEGORIES = (
 
 BLUE = '4472C4'
 LIGHT_BLUE = 'D9EAF7'
+INCONFORMITY_BLUE = '8EA9DB'
+INCONFORMITY_LIGHT_BLUE = 'B8CCE4'
+RED = 'FF0000'
+BLACK = '000000'
 WHITE = 'FFFFFF'
 BORDER = '9FBAD0'
 DATE_HEADERS = {'data inicio', 'data fim', 'data visita inicio', 'data visita fim'}
@@ -291,21 +295,26 @@ def _value(record, header):
     return record.get(mother_engine.canonical_header(header))
 
 
-def _style_data_sheet(ws, headers, records, table_name):
+def _style_data_sheet(ws, headers, records, table_name, *,
+                      header_fill=BLUE, header_font=WHITE,
+                      row_fills=None, table_style='TableStyleMedium2'):
     ws.append(headers)
     for record in records:
         ws.append([_value(record, header) for header in headers])
     header = ws[1]
     for cell in header:
-        cell.fill = PatternFill('solid', fgColor=BLUE)
-        cell.font = Font(name='Calibri', size=11, bold=True, color=WHITE)
+        cell.fill = PatternFill('solid', fgColor=header_fill)
+        cell.font = Font(name='Calibri', size=11, bold=True, color=header_font)
         cell.alignment = Alignment(horizontal='center', vertical='center')
     thin = Side(style='thin', color=BORDER)
-    for row in ws.iter_rows(min_row=2, max_row=ws.max_row, max_col=len(headers)):
+    for row_number, row in enumerate(
+            ws.iter_rows(min_row=2, max_row=ws.max_row, max_col=len(headers)), start=2):
         for cell in row:
             cell.font = Font(name='Calibri', size=10)
             cell.border = Border(bottom=thin)
             cell.alignment = Alignment(vertical='center')
+            if row_fills:
+                cell.fill = PatternFill('solid', fgColor=row_fills[(row_number - 2) % len(row_fills)])
     for index, header_name in enumerate(headers, start=1):
         key = mother_engine.canonical_header(header_name)
         if key in DATE_HEADERS:
@@ -321,12 +330,14 @@ def _style_data_sheet(ws, headers, records, table_name):
         # A Tabela já possui seus próprios filtros. Manter também um AutoFilter
         # sobre a mesma faixa gera um XLSX que algumas versões do Excel recusam.
         table = Table(displayName=table_name, ref=table_ref)
-        table.tableStyleInfo = TableStyleInfo(name='TableStyleMedium2', showRowStripes=True,
-                                              showFirstColumn=False, showLastColumn=False)
+        if table_style:
+            table.tableStyleInfo = TableStyleInfo(name=table_style, showRowStripes=True,
+                                                  showFirstColumn=False, showLastColumn=False)
         ws.add_table(table)
 
 
-def _write_simple_table(ws, start_row, headers, rows, table_name, widths=None):
+def _write_simple_table(ws, start_row, headers, rows, table_name, widths=None,
+                        header_fill=BLUE):
     for column, value in enumerate(headers, start=1):
         ws.cell(start_row, column, value)
     for offset, values in enumerate(rows, start=1):
@@ -336,7 +347,7 @@ def _write_simple_table(ws, start_row, headers, rows, table_name, widths=None):
     end_col = len(headers)
     for cell in ws[start_row]:
         if cell.column <= end_col:
-            cell.fill = PatternFill('solid', fgColor=BLUE)
+            cell.fill = PatternFill('solid', fgColor=header_fill)
             cell.font = Font(name='Calibri', size=11, bold=True, color=WHITE)
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     ws.row_dimensions[start_row].height = 32
@@ -371,7 +382,11 @@ def create_rank_workbook(mother_file, output, previous_rank='', report=None, pro
         'Painel Veículo Indisponível', 'Painel Supervisão', 'Base Supervisão',
     ]
     sheets = {name: workbook.create_sheet(name) for name in order}
-    _style_data_sheet(sheets['Inconformidades'], HEADERS, inconformities, 'TabelaInconformidades')
+    _style_data_sheet(
+        sheets['Inconformidades'], HEADERS, inconformities, 'TabelaInconformidades',
+        header_fill=WHITE, header_font=BLACK,
+        row_fills=(INCONFORMITY_BLUE, INCONFORMITY_LIGHT_BLUE), table_style=None,
+    )
     _style_data_sheet(sheets['Base Rank'], HEADERS, base_rank, 'TabelaBaseRank')
     _style_data_sheet(sheets['Base Veículo Indisponível'], HEADERS, vehicle_base, 'TabelaBaseVeiculo')
     _style_data_sheet(sheets['Base Supervisão'], SUPERVISION_HEADERS, supervision_base, 'TabelaBaseSupervisao')
@@ -385,16 +400,19 @@ def create_rank_workbook(mother_file, output, previous_rank='', report=None, pro
         (row['provider'], *(row[category] or None for category in PENALTY_CATEGORIES),
          row['occurrences'], row['total']) for row in ugly
     ]
-    _write_simple_table(sheets['Rank Ugly'], 1, ugly_headers, ugly_rows,
-                        'TabelaRankOcorrencias', [55, 22, 26, 20, 36, 14, 14])
-    no_show_start = len(ugly_rows) + 9
+    no_show_rows = [
+        (row['provider'], row[PENALTY_CATEGORIES[3]], row['occurrences'], row['total'])
+        for row in no_show
+    ]
     _write_simple_table(
-        sheets['Rank Ugly'], no_show_start,
-        ['Rótulos de Linha', PENALTY_CATEGORIES[3], 'Ocorrências', 'Total Geral'],
-        [(row['provider'], row[PENALTY_CATEGORIES[3]], row['occurrences'], row['total'])
-         for row in no_show],
-        'TabelaRankNoShow', [55, 36, 14, 14],
+        sheets['Rank Ugly'], 1,
+        [PENALTY_CATEGORIES[3], PENALTY_CATEGORIES[3] + '\u00a0',
+         'Ocorrências', 'Total Geral'],
+        no_show_rows, 'TabelaRankNoShow', [55, 36, 14, 14], header_fill=RED,
     )
+    ugly_start = len(no_show_rows) + 9
+    _write_simple_table(sheets['Rank Ugly'], ugly_start, ugly_headers, ugly_rows,
+                        'TabelaRankOcorrencias', [55, 22, 26, 20, 36, 14, 14])
     for name in ('Painel Inconformidades', 'Painel Rank',
                  'Painel Veículo Indisponível', 'Painel Supervisão'):
         sheets[name].sheet_view.showGridLines = True
@@ -460,6 +478,7 @@ def create_native_pivots(path, report, progress=None):
         xl_row_field = 1
         xl_column_field = 2
         xl_count = -4112
+        xl_descending = 2
         xl_sheet_hidden = 0
         specs = [
             ('Inconformidades', 'Painel Inconformidades', 'TabelaInconformidades',
@@ -501,6 +520,10 @@ def create_native_pivots(path, report, progress=None):
             pivot.DisplayFieldCaptions = True
             pivot.ShowTableStyleRowStripes = False
             pivot.RefreshTable()
+            if panel_name == 'Painel Veículo Indisponível':
+                pivot.PivotFields('Cliente').AutoSort(
+                    xl_descending, f'Contagem de {data_field}'
+                )
             panel.Columns.AutoFit()
             panel.Columns('A').ColumnWidth = min(max(panel.Columns('A').ColumnWidth, 24), 58)
 
