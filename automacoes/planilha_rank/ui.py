@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from app_info import APP_AUTHOR, APP_NAME, APP_VERSION, apply_window_icon, center_window
+from app_info import APP_AUTHOR, APP_NAME, APP_VERSION, REVIEW_NOTICE, apply_window_icon, center_window
 from automacoes.planilha_mae.theme import COLORS, configure_styles
 from . import engine
 from .service import RankJobConfig, planned_output, process, validate
@@ -220,13 +220,15 @@ class RankWindow(tk.Tk):
                         f'{result.mapping_providers} prestador(es) sem ambiguidade.',
                         'info',
                     )
-                    messagebox.showinfo(
-                        'Planilha Rank concluída',
+                    self._log(f'REVISE ANTES DE ENTREGAR: {REVIEW_NOTICE}', 'info')
+                    messagebox.showwarning(
+                        'Planilha Rank concluída — revisão necessária',
                         f'Arquivo:\n{result.output}\n\nRelatório:\n{result.report}\n\n'
                         f'Visitas no ranking: {result.base_rank}\n'
                         f'Ocorrências: {result.occurrences}\n'
                         f'Mapeadas: {result.mapped}\n'
-                        f'Não mapeadas: {result.unmapped}',
+                        f'Não mapeadas: {result.unmapped}\n\n'
+                        f'ATENÇÃO:\n{REVIEW_NOTICE}',
                     )
                 elif event[0] == 'error':
                     exc = event[1]

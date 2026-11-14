@@ -3,8 +3,13 @@ from pathlib import Path
 import tkinter as tk
 
 APP_NAME = 'AutoPlan Hub'
-APP_VERSION = '0.3.4'
+APP_VERSION = '0.4.0'
 APP_AUTHOR = 'Leonardo Aguiar'
+REVIEW_NOTICE = (
+    'Revise cuidadosamente a planilha gerada ou atualizada antes de entregar, '
+    'enviar ou utilizar como versão oficial. Confira se não faltam dados e se '
+    'nenhuma informação precisa ser corrigida.'
+)
 APP_ROOT = Path(__file__).resolve().parent
 ICON_PNG = APP_ROOT / 'assets' / 'autoplan-hub-icon.png'
 ICON_ICO = APP_ROOT / 'assets' / 'autoplan-hub.ico'

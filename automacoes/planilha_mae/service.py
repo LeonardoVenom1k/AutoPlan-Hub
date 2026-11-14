@@ -6,6 +6,7 @@ import shutil
 
 from openpyxl import load_workbook
 
+from app_info import REVIEW_NOTICE
 from . import engine
 
 
@@ -49,6 +50,41 @@ def validate(config: JobConfig):
         raise ValueError('Selecione uma pasta de saída válida.')
 
 
+def build_report_text(config, output, backup, added, events, generated_at=None):
+    generated_at = generated_at or datetime.now()
+    mode = 'Atualização de uma Planilha Mãe existente' if config.mode == 'update' else 'Criação de uma nova Planilha Mãe'
+    daily_files = '\n'.join(f'- {Path(path).name}' for path in config.daily_files)
+    event_text = '\n'.join(f'- {event}' for event in events) if events else '- Nenhum conflito ou aviso registrado.'
+    backup_text = str(backup) if backup else 'Não se aplica.'
+    added_text = str(added) if config.mode == 'update' else 'Arquivo novo criado.'
+    return (
+        'AUTOPLAN HUB — RELATÓRIO DE PROCESSAMENTO DA PLANILHA MÃE\n'
+        '================================================================\n\n'
+        '1. IDENTIFICAÇÃO\n'
+        f'Data e hora: {generated_at:%d/%m/%Y %H:%M:%S}\n'
+        f'Operação: {mode}\n'
+        f'Período: {engine.MONTHS_PT[config.month]} {config.year}\n'
+        f'Arquivo resultante: {output}\n'
+        f'Backup: {backup_text}\n\n'
+        '2. ARQUIVOS UTILIZADOS\n'
+        f'Relatório final do mês: {Path(config.final_file).name}\n'
+        f'Planilhas diárias selecionadas: {len(config.daily_files)}\n'
+        f'{daily_files}\n\n'
+        '3. RESULTADO RESUMIDO\n'
+        f'Registros adicionados durante a atualização: {added_text}\n'
+        'A aba Inconformidades e o Painel foram recalculados.\n'
+        'Os filtros e o detalhamento por duplo clique foram preparados no Excel.\n\n'
+        '4. OCORRÊNCIAS, ATUALIZAÇÕES E DECISÕES\n'
+        f'{event_text}\n\n'
+        '5. REVISÃO ANTES DA ENTREGA\n'
+        f'{REVIEW_NOTICE}\n'
+        '- Confira se todas as planilhas diárias foram selecionadas.\n'
+        '- Confira os totais do Painel e as linhas de Inconformidades.\n'
+        '- Revise conflitos, motivos não mapeados e registros ignorados.\n'
+        '- Abra algumas contagens por duplo clique para validar os detalhes.\n'
+    )
+
+
 def process(config: JobConfig, progress=lambda value, message: None) -> JobResult:
     validate(config)
     output = planned_output(config)
@@ -78,12 +114,9 @@ def process(config: JobConfig, progress=lambda value, message: None) -> JobResul
 
     engine.create_native_pivot(output,report,progress)
     report_path=output.parent/(output.stem+'_relatorio.txt')
-    with open(report_path,'w',encoding='utf-8') as file:
-        file.write(f'Relatório: {datetime.now():%d/%m/%Y %H:%M:%S}\n')
-        file.write(f'Arquivo: {output}\n')
-        file.write(f'Período: {engine.MONTHS_PT[config.month]} {config.year}\n')
-        file.write(f'Modo: {config.mode}\n\n')
-        file.write('\n'.join(report) if report else 'Nenhum conflito ou aviso registrado.')
+    report_path.write_text(
+        build_report_text(config, output, backup, added, report), encoding='utf-8'
+    )
     progress(100, 'Processamento concluído.')
     return JobResult(output,report_path,backup,added)
 

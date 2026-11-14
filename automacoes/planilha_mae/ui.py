@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from app_info import APP_AUTHOR, APP_NAME, APP_VERSION, apply_window_icon, center_window
+from app_info import APP_AUTHOR, APP_NAME, APP_VERSION, REVIEW_NOTICE, apply_window_icon, center_window
 from . import engine
 from .service import JobConfig, planned_output, process
 from .theme import COLORS, configure_styles
@@ -221,8 +221,13 @@ class ConsolidatorWindow(tk.Tk):
                     self.progress_label.config(text=f'{value}% — {message}'); self._log(message,'info')
                 elif event[0]=='done':
                     result=event[1]; self.run_button.state(['!disabled']); self._log(f'Concluído: {result.output}','ok')
+                    self._log(f'REVISE ANTES DE ENTREGAR: {REVIEW_NOTICE}','info')
                     backup=f'\n\nBackup: {result.backup}' if result.backup else ''
-                    messagebox.showinfo('Processamento concluído',f'Arquivo:\n{result.output}\n\nRelatório:\n{result.report}{backup}')
+                    messagebox.showwarning(
+                        'Processamento concluído — revisão necessária',
+                        f'Arquivo:\n{result.output}\n\nRelatório:\n{result.report}{backup}\n\n'
+                        f'ATENÇÃO:\n{REVIEW_NOTICE}',
+                    )
                 elif event[0]=='error':
                     exc=event[1]; self.run_button.state(['!disabled']); self._log(f'ERRO: {exc}','error')
                     messagebox.showerror('Falha no processamento',str(exc))
