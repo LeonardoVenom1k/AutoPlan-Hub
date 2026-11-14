@@ -214,7 +214,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.5.0').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.5.1').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -256,8 +256,8 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.5.0'),
-        ('Versão do documento', '2.3'),
+        ('Versão do software', '0.5.1'),
+        ('Versão do documento', '2.4'),
         ('Responsável', 'Leonardo Aguiar'),
         ('Data de emissão', '14 de novembro de 2026'),
     ]
@@ -279,7 +279,7 @@ def build():
 
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório privado.')
-    add_body(doc, 'A versão 0.5.0 adiciona uma confirmação sonora ao fluxo de trabalho. Ao concluir as automações de Planilha Mãe ou Planilha Rank, o AutoPlan Hub reproduz um aviso curto antes de apresentar a mensagem de revisão obrigatória.')
+    add_body(doc, 'A versão 0.5.1 esclarece o fluxo de atualização gradual da Planilha Mãe. A interface passa a solicitar o relatório final mais recente, que pode ser baixado alguns dias depois para comparar e atualizar resultados e horários já importados.')
 
     add_heading(doc, 'Conteúdo do documento', 2)
     contents = [
@@ -302,7 +302,7 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.5.0', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.5.1', 2)
     add_bullets(doc, [
         'Menu principal com acesso às automações disponíveis.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
@@ -389,7 +389,7 @@ def build():
     for i, text in enumerate(['Entrada', 'Obrigatória', 'Finalidade']): inputs.rows[0].cells[i].text=text
     for values in [
         ('Planilhas diárias', 'Sim', 'Fornecem visitas, estados, horários e atrasos marcados pela equipe.'),
-        ('Relatório final do mês', 'Sim', 'Fonte oficial das inconformidades, do resultado final e do horário real de chegada.'),
+        ('Relatório final mais recente', 'Sim', 'Fonte de comparação das inconformidades, do resultado atualizado e do horário real de chegada, inclusive quando baixada alguns dias depois.'),
         ('Planilha Mãe existente', 'Somente ao atualizar', 'Arquivo que receberá novos registros e recálculo do Painel.'),
     ]:
         cells=inputs.add_row().cells
@@ -499,7 +499,7 @@ def build():
 
     add_heading(doc, '9 Versionamento Git e publicação', 1)
     add_heading(doc, '9.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.5.0, que adiciona uma notificação sonora ao término das automações.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.5.1, que esclarece o uso do relatório final mais recente nas atualizações graduais.')
     add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -586,6 +586,7 @@ def build():
         ['0.4.1','2.1','14/11/2026','Leonardo Aguiar','Grade preta fina aplicada em toda a base de inconformidades do Rank.'],
         ['0.4.2','2.2','14/11/2026','Leonardo Aguiar','Associação de técnicos aprimorada e prestadores vazios preenchidos pelo técnico.'],
         ['0.5.0','2.3','14/11/2026','Leonardo Aguiar','Som de notificação reproduzido ao concluir as automações.'],
+        ['0.5.1','2.4','14/11/2026','Leonardo Aguiar','Entrada renomeada para relatório final mais recente usado na comparação.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value
