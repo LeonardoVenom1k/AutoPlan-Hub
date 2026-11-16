@@ -234,7 +234,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.7.0').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.7.1').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -276,8 +276,8 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.7.0'),
-        ('Versão do documento', '4.0'),
+        ('Versão do software', '0.7.1'),
+        ('Versão do documento', '4.1'),
         ('Responsável', 'Leonardo Aguiar'),
         ('Data de emissão', '16 de novembro de 2026'),
     ]
@@ -327,7 +327,7 @@ def build():
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório público.')
     add_body(doc, 'Repositório oficial: https://github.com/LeonardoVenom1k/AutoPlan-Hub')
-    add_body(doc, 'A versão 0.7.0 disponibiliza um executável único para Windows e um mecanismo controlado de atualização. Um botão no rodapé consulta o manifesto publicado no GitHub, informa se existe nova versão e permite baixar, validar e substituir o executável anterior.')
+    add_body(doc, 'A versão 0.7.1 torna automática a verificação de atualização ao abrir o programa e repete a consulta a cada hora. O botão permanece bloqueado quando não existe nova versão e só aceita clique quando uma atualização está disponível. Esta versão também apresenta o futuro Cobrador automático como módulo bloqueado.')
 
     doc.add_page_break()
     p = doc.add_paragraph()
@@ -343,7 +343,7 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.7.0', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.7.1', 2)
     add_bullets(doc, [
         'Menu principal com o Ambiente de Trabalho como primeira opção e as automações de planilhas logo abaixo.',
         'Preferências persistentes para abrir WhatsApp, Outlook e Teams no Desktop ou no Chrome.',
@@ -355,6 +355,8 @@ def build():
         'Executável único para Windows com a versão incorporada ao nome do arquivo.',
         'Botão de atualização no rodapé com estados de verificação, versão atual e nova versão disponível.',
         'Validação do endereço, nome e assinatura SHA-256 antes da substituição do executável.',
+        'Verificação automática de atualização na abertura e a cada sessenta minutos.',
+        'Módulo planejado Cobrador automático exibido de forma bloqueada.',
         'Abertura opcional de Maxtrack GO, Zendesk, ChatGPT, Downloads e Bloco de Notas.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
         'Consolidador de Planilha Mãe com modos de criação e atualização.',
@@ -446,7 +448,7 @@ def build():
     add_body(doc, 'No menu principal, Abrir executa diretamente a configuração salva e Configurar abre a tela de escolhas. As preferências são gravadas em uma pasta de configuração do usuário do Windows. O iniciador não encerra o Chrome e não remove abas abertas. Quando a restauração de sessão estiver marcada, o Chrome é iniciado sem receber novamente a lista de links. Quando um aplicativo Desktop não estiver instalado ou registrado no Windows, a tela informa a falha sem impedir a abertura dos demais itens.')
 
     add_heading(doc, '3.5 Executável e atualização', 2)
-    add_body(doc, 'O arquivo distribuído segue o padrão AutoPlan-Hub-vMAJOR.MINOR.PATCH.exe. O botão Verificar atualização fica no rodapé, separado das automações. Ao consultar o manifesto público, o botão fica verde e bloqueado quando a versão instalada é a mais recente. Quando existe uma versão superior, fica vermelho e permite iniciar o download após confirmação do usuário.')
+    add_body(doc, 'O arquivo distribuído segue o padrão AutoPlan-Hub-vMAJOR.MINOR.PATCH.exe. A consulta ao manifesto ocorre automaticamente um segundo após a abertura e é repetida a cada sessenta minutos enquanto o programa estiver aberto. O botão fica verde e bloqueado quando a versão instalada é a mais recente. Quando existe uma versão superior, fica vermelho e permite iniciar o download após confirmação do usuário. Em caso de indisponibilidade da consulta, permanece bloqueado e uma nova tentativa ocorre no próximo ciclo.')
     add_numbered(doc, [
         'Consultar o arquivo executavel/manifest.json no repositório oficial.',
         'Comparar a versão publicada com APP_VERSION usando os três componentes numéricos.',
@@ -587,7 +589,7 @@ def build():
 
     add_heading(doc, '9 Versionamento Git e publicação', 1)
     add_heading(doc, '9.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.7.0, que adiciona distribuição por executável e atualização controlada pelo manifesto publicado no GitHub.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.7.1, que automatiza a consulta periódica de atualizações e apresenta o futuro Cobrador automático como módulo bloqueado.')
     add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -652,7 +654,12 @@ def build():
         'Tela de configurações para categorias e mapeamentos.',
         'Tela de manutenção do cadastro de supervisão sem depender de uma planilha anterior.',
         'Novos módulos no menu do AutoPlan Hub.',
+        'Cobrador automático com horário definido pelo usuário, empresa obtida da planilha e envio por resposta à confirmação.',
     ])
+
+    add_heading(doc, '10.4 Especificação futura do Cobrador automático', 2)
+    add_body(doc, 'O módulo permanece bloqueado nesta versão. Quando implementado, deverá localizar a confirmação do atendimento, acessar a ação de resposta e enviar a cobrança no horário informado pelo usuário. A mensagem deverá perguntar se o responsável já está a caminho, solicitar a previsão de chegada e incluir a empresa obtida da planilha.')
+    add_body(doc, 'Não deverão receber cobrança os registros cancelados por texto ou cor vermelha, os concluídos em verde e os classificados como Aguardando ação gestor. Registros MTS identificados em amarelo deverão ser cobrados uma hora depois do horário programado. Essas regras precisarão de validação em ambiente controlado antes da ativação do módulo.')
 
     add_heading(doc, '11 Histórico de versões', 1)
     versions = doc.add_table(rows=1, cols=5)
@@ -679,6 +686,7 @@ def build():
         ['0.6.2','3.2','16/11/2026','Leonardo Aguiar','Botões do ambiente padronizados e módulos planejados exibidos de forma bloqueada no menu.'],
         ['0.6.3','3.3','16/11/2026','Leonardo Aguiar','Menu rolável para evitar corte da parte inferior e manter o rodapé visível sem maximização.'],
         ['0.7.0','4.0','16/11/2026','Leonardo Aguiar','Executável único para Windows e atualização com manifesto público, confirmação e verificação SHA-256.'],
+        ['0.7.1','4.1','16/11/2026','Leonardo Aguiar','Verificação automática na abertura e a cada hora, além do Cobrador automático planejado e bloqueado.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value

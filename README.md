@@ -6,7 +6,7 @@ Central local de automações para rotinas operacionais.
 
 **Repositório oficial:** [github.com/LeonardoVenom1k/AutoPlan-Hub](https://github.com/LeonardoVenom1k/AutoPlan-Hub)
 
-**Versão:** 0.7.0
+**Versão:** 0.7.1
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automações disponíveis
@@ -28,6 +28,25 @@ Central local de automações para rotinas operacionais.
 - **Limpeza de planilhas diárias:** destinado à preparação de planilhas de Logística, Raízen e SPTrans.
 - Os dois módulos aparecem no menu como `Em desenvolvimento` e permanecem bloqueados até a implementação.
 - O menu possui rolagem própria para manter o rodapé e o botão Fechar visíveis em telas menores, sem exigir maximização.
+
+#### Cobrador automático
+
+O terceiro módulo planejado ficará responsável por enviar cobranças de previsão de chegada no horário definido pelo usuário. Ele permanece bloqueado nesta versão. A implementação futura deverá:
+
+- Localizar a confirmação e acessar a ação de responder.
+- Inserir a empresa obtida da planilha na mensagem.
+- Não cobrar registros cancelados, identificados pela cor vermelha ou pelo texto `Cancelado`.
+- Não cobrar atendimentos concluídos em verde.
+- Não cobrar registros em `Aguardando ação gestor`.
+- Adiar em uma hora os registros MTS identificados em amarelo.
+- Usar a seguinte mensagem:
+
+```text
+Bom dia, tudo bem?
+Já está a caminho do local de atendimento? Qual seria a previsão de chegada, por gentileza?
+
+Empresa: (empresa obtida da planilha)
+```
 
 ### Consolidador de Planilha Mãe
 
@@ -99,6 +118,7 @@ Também é possível abrir pelo arquivo `Abrir AutoPlan Hub.bat`.
 - O executável pronto para Windows fica na pasta [`executavel`](executavel/).
 - O número da versão faz parte do nome, por exemplo `AutoPlan-Hub-v0.7.0.exe`.
 - O botão pequeno no rodapé consulta o `manifest.json` publicado no GitHub.
+- A consulta é feita automaticamente ao abrir o programa e repetida a cada uma hora enquanto ele permanecer aberto.
 - Verde significa que a versão instalada é a mais recente e o botão permanece bloqueado.
 - Vermelho significa que existe uma versão mais recente e o botão permite baixá-la.
 - Antes da troca, o arquivo baixado é validado pela assinatura SHA-256.

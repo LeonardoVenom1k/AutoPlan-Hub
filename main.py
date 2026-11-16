@@ -141,6 +141,20 @@ class AutoPlanHub(tk.Tk):
                  wraplength=330, justify='left').pack(anchor='w', pady=(4, 10))
         ttk.Button(cleanup_card, text='Em desenvolvimento', state='disabled').pack(anchor='w')
 
+        collection_card = tk.Frame(planned, bg='#F8FAFC', highlightbackground='#C9D5E3',
+                                   highlightthickness=1, padx=18, pady=14)
+        collection_card.grid(row=1, column=0, columnspan=2, sticky='nsew', pady=(14, 0))
+        tk.Label(collection_card, text='Cobrador automático', bg='#F8FAFC', fg='#526273',
+                 font=('Segoe UI', 12, 'bold')).pack(anchor='w')
+        tk.Label(
+            collection_card,
+            text=('Programará cobranças de previsão de chegada, usando a empresa da planilha '
+                  'e respeitando os estados que não devem receber mensagem.'),
+            bg='#F8FAFC', fg='#64748B', font=('Segoe UI', 9),
+            wraplength=720, justify='left',
+        ).pack(anchor='w', pady=(4, 10))
+        ttk.Button(collection_card, text='Em desenvolvimento', state='disabled').pack(anchor='w')
+
         footer = tk.Frame(self, bg='#E3EAF2', padx=20, pady=9)
         footer.pack(fill='x', side='bottom')
         tk.Label(footer, text=f'{APP_NAME}  •  Desenvolvido por {APP_AUTHOR}  •  Versão {APP_VERSION}', bg='#E3EAF2', fg='#526273',
@@ -148,19 +162,31 @@ class AutoPlanHub(tk.Tk):
         ttk.Button(footer, text='Fechar', style='Secondary.TButton',
                    command=self.destroy).pack(side='right')
         self.update_button = tk.Button(
-            footer, text='Verificar atualização', font=('Segoe UI', 8, 'bold'),
+            footer, text='Verificando atualização...', font=('Segoe UI', 8, 'bold'),
             bg='#D7E0EA', fg='#334155', activebackground='#C9D5E3',
-            relief='flat', padx=10, pady=5, cursor='hand2',
-            command=self.check_for_update,
+            disabledforeground='#526273', relief='flat', padx=10, pady=5,
+            cursor='arrow', state='disabled',
         )
         self.update_button.pack(side='right', padx=(0, 10))
         self.available_release = None
+        self._update_check_running = False
+        self._update_check_job = None
         center_window(self, 920, 700)
+        self.after(1000, self.check_for_update)
 
     def check_for_update(self):
+        if self._update_check_running:
+            return
+        self._update_check_running = True
         self.update_button.configure(
             text='Verificando...', state='disabled', bg='#D7E0EA', fg='#526273', cursor='arrow')
         threading.Thread(target=self._check_update_worker, daemon=True).start()
+
+    def _schedule_next_update_check(self):
+        self._update_check_running = False
+        if self._update_check_job is not None:
+            self.after_cancel(self._update_check_job)
+        self._update_check_job = self.after(60 * 60 * 1000, self.check_for_update)
 
     def _check_update_worker(self):
         try:
@@ -170,11 +196,11 @@ class AutoPlanHub(tk.Tk):
             self.after(0, self._show_update_result, None, exc)
 
     def _show_update_result(self, release, error):
+        self._schedule_next_update_check()
         if error:
             self.update_button.configure(
-                text='Falha ao verificar', state='normal', bg='#B7791F', fg='white',
-                activebackground='#975A16', cursor='hand2', command=self.check_for_update)
-            messagebox.showwarning('Atualização', f'Não foi possível verificar novas versões:\n{error}')
+                text='Verificação indisponível', state='disabled', bg='#B7791F', fg='white',
+                disabledforeground='white', cursor='arrow', command=lambda: None)
             return
         if is_newer(release):
             self.available_release = release
@@ -185,7 +211,7 @@ class AutoPlanHub(tk.Tk):
         self.available_release = None
         self.update_button.configure(
             text=f'Versão {APP_VERSION} atual', state='disabled', bg='#2E7D32', fg='white',
-            disabledforeground='white', cursor='arrow')
+            disabledforeground='white', cursor='arrow', command=lambda: None)
 
     def download_update(self):
         release = self.available_release
