@@ -45,7 +45,7 @@ def fetch_release(timeout: int = 12) -> ReleaseInfo:
         headers={'User-Agent': f'AutoPlan-Hub/{APP_VERSION}'},
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        payload = json.loads(response.read().decode('utf-8'))
+        payload = json.loads(response.read().decode('utf-8-sig'))
     release = ReleaseInfo(
         version=str(payload['version']),
         filename=str(payload['filename']),

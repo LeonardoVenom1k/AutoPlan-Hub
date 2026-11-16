@@ -39,7 +39,9 @@ $manifest = [ordered]@{
     download_url = "https://raw.githubusercontent.com/LeonardoVenom1k/AutoPlan-Hub/main/executavel/$name.exe"
     sha256 = $hash
 }
-$manifest | ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $outputDir 'manifest.json')
+$manifestJson = $manifest | ConvertTo-Json
+$utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText((Join-Path $outputDir 'manifest.json'), $manifestJson, $utf8WithoutBom)
 Write-Output $executable
 Write-Output "SHA-256: $hash"
 
