@@ -40,3 +40,10 @@ def test_configuracao_invalida_volta_para_web(tmp_path):
     path = tmp_path / 'preferencias.json'
     path.write_text('{"whatsapp_mode": "qualquer"}', encoding='utf-8')
     assert load_config(path).whatsapp_mode == 'web'
+
+
+def test_preferencia_de_restauracao_do_chrome_e_persistida(tmp_path):
+    path = tmp_path / 'preferencias.json'
+    config = WorkEnvironmentConfig(chrome_restores_tabs=True)
+    save_config(config, path)
+    assert load_config(path).chrome_restores_tabs is True

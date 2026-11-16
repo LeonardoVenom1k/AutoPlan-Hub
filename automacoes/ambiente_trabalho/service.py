@@ -40,6 +40,7 @@ class WorkEnvironmentConfig:
     chatgpt_enabled: bool = True
     downloads_enabled: bool = True
     notepad_enabled: bool = True
+    chrome_restores_tabs: bool = False
 
 
 def config_path() -> Path:
@@ -129,11 +130,16 @@ def launch_environment(
         try:
             chrome = find_chrome()
             if chrome:
-                subprocess.Popen([str(chrome), *urls])
+                command = [str(chrome)] if config.chrome_restores_tabs else [str(chrome), *urls]
+                subprocess.Popen(command)
+                if config.chrome_restores_tabs:
+                    successes.append('Chrome com as abas da sessão anterior')
+                else:
+                    successes.append(f'{len(urls)} ferramenta(s) no navegador')
             else:
                 for url in urls:
                     webbrowser.open_new_tab(url)
-            successes.append(f'{len(urls)} ferramenta(s) no navegador')
+                successes.append(f'{len(urls)} ferramenta(s) no navegador padrão')
         except Exception as exc:
             failures.append(f'Navegador: {exc}')
 

@@ -21,7 +21,7 @@ class WorkEnvironmentWindow(tk.Tk):
         self.config_data = load_config()
         self.vars = {}
         self._build()
-        center_window(self, 760, 700)
+        center_window(self, 760, 760)
 
     def _build(self):
         style = ttk.Style(self)
@@ -79,6 +79,22 @@ class WorkEnvironmentWindow(tk.Tk):
             ttk.Checkbutton(grid, text=label, variable=var).grid(
                 row=index // 2, column=index % 2, sticky='w', padx=(0, 55), pady=7)
 
+        browser = tk.Frame(body, bg='white', highlightbackground='#C9D5E3',
+                           highlightthickness=1, padx=22, pady=15)
+        browser.pack(fill='x', pady=(14, 0))
+        chrome_restores = tk.BooleanVar(value=self.config_data.chrome_restores_tabs)
+        self.vars['chrome_restores_tabs'] = chrome_restores
+        ttk.Checkbutton(
+            browser,
+            text='O Chrome já restaura minhas abas da sessão anterior',
+            variable=chrome_restores,
+        ).pack(anchor='w')
+        tk.Label(
+            browser,
+            text='Quando marcada, esta opção abre o Chrome sem repetir os links selecionados.',
+            bg='white', fg='#64748B', font=('Segoe UI', 9),
+        ).pack(anchor='w', padx=(24, 0), pady=(4, 0))
+
         note = tk.Label(body,
                         text='As escolhas ficam salvas somente neste computador. O AutoPlan Hub não fecha o Chrome nem altera abas já abertas.',
                         bg='#EEF3F8', fg='#526273', font=('Segoe UI', 9), wraplength=680, justify='left')
@@ -103,6 +119,7 @@ class WorkEnvironmentWindow(tk.Tk):
             chatgpt_enabled=self.vars['chatgpt_enabled'].get(),
             downloads_enabled=self.vars['downloads_enabled'].get(),
             notepad_enabled=self.vars['notepad_enabled'].get(),
+            chrome_restores_tabs=self.vars['chrome_restores_tabs'].get(),
         )
 
     def _save(self, show_message=True):

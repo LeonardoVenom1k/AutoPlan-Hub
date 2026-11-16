@@ -234,7 +234,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.6.0').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.6.1').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -276,8 +276,8 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.6.0'),
-        ('Versão do documento', '3.0'),
+        ('Versão do software', '0.6.1'),
+        ('Versão do documento', '3.1'),
         ('Responsável', 'Leonardo Aguiar'),
         ('Data de emissão', '16 de novembro de 2026'),
     ]
@@ -327,7 +327,7 @@ def build():
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório público.')
     add_body(doc, 'Repositório oficial: https://github.com/LeonardoVenom1k/AutoPlan-Hub')
-    add_body(doc, 'A versão 0.6.0 adiciona um iniciador do ambiente de trabalho. O usuário escolhe se WhatsApp, Outlook e Teams serão abertos no aplicativo Desktop ou no Chrome, seleciona os demais atalhos e mantém essas preferências salvas no próprio computador.')
+    add_body(doc, 'A versão 0.6.1 separa as ações Abrir e Configurar no menu. Abrir usa imediatamente as preferências salvas. Configurar permite escolher aplicativos, sites e indicar que o Chrome já restaura as abas da sessão anterior, evitando a abertura repetida dos mesmos links.')
 
     doc.add_page_break()
     p = doc.add_paragraph()
@@ -343,10 +343,12 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.6.0', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.6.1', 2)
     add_bullets(doc, [
         'Menu principal com o Ambiente de Trabalho como primeira opção e as automações de planilhas logo abaixo.',
         'Preferências persistentes para abrir WhatsApp, Outlook e Teams no Desktop ou no Chrome.',
+        'Botões separados para abrir imediatamente ou modificar a configuração.',
+        'Opção para respeitar a restauração das abas da sessão anterior pelo Chrome.',
         'Abertura opcional de Maxtrack GO, Zendesk, ChatGPT, Downloads e Bloco de Notas.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
         'Consolidador de Planilha Mãe com modos de criação e atualização.',
@@ -430,8 +432,9 @@ def build():
         'Marcar WhatsApp, Outlook e Teams e escolher Desktop ou Web no Chrome.',
         'Marcar os demais sites, a pasta Downloads e o Bloco de Notas conforme a rotina.',
         'Usar Salvar preferências para registrar a seleção ou Salvar e abrir agora para registrar e iniciar os itens.',
+        'Marcar O Chrome já restaura minhas abas quando o navegador estiver configurado para recuperar a sessão anterior.',
     ])
-    add_body(doc, 'As preferências são gravadas em uma pasta de configuração do usuário do Windows. O iniciador não encerra o Chrome e não remove abas abertas. Quando um aplicativo Desktop não estiver instalado ou registrado no Windows, a tela informa a falha sem impedir a abertura dos demais itens.')
+    add_body(doc, 'No menu principal, Abrir executa diretamente a configuração salva e Configurar abre a tela de escolhas. As preferências são gravadas em uma pasta de configuração do usuário do Windows. O iniciador não encerra o Chrome e não remove abas abertas. Quando a restauração de sessão estiver marcada, o Chrome é iniciado sem receber novamente a lista de links. Quando um aplicativo Desktop não estiver instalado ou registrado no Windows, a tela informa a falha sem impedir a abertura dos demais itens.')
 
     add_heading(doc, '4 Consolidador de Planilha Mãe', 1)
     add_heading(doc, '4.1 Modo Criar', 2)
@@ -563,7 +566,7 @@ def build():
 
     add_heading(doc, '9 Versionamento Git e publicação', 1)
     add_heading(doc, '9.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.6.0, que adiciona o iniciador configurável do ambiente de trabalho.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.6.1, que separa as ações do ambiente de trabalho e evita links duplicados quando o Chrome restaura a sessão anterior.')
     add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -651,6 +654,7 @@ def build():
         ['0.5.0','2.3','14/11/2026','Leonardo Aguiar','Som de notificação reproduzido ao concluir as automações.'],
         ['0.5.1','2.4','14/11/2026','Leonardo Aguiar','Entrada renomeada para relatório final mais recente usado na comparação.'],
         ['0.6.0','3.0','16/11/2026','Leonardo Aguiar','Ambiente de trabalho configurável, preferências persistentes e documentação formal com referências legais.'],
+        ['0.6.1','3.1','16/11/2026','Leonardo Aguiar','Botões Abrir e Configurar separados e opção para respeitar a restauração de abas do Chrome.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value

@@ -6,7 +6,7 @@ Central local de automações para rotinas operacionais.
 
 **Repositório oficial:** [github.com/LeonardoVenom1k/AutoPlan-Hub](https://github.com/LeonardoVenom1k/AutoPlan-Hub)
 
-**Versão:** 0.6.0
+**Versão:** 0.6.1
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automações disponíveis
@@ -18,6 +18,8 @@ Central local de automações para rotinas operacionais.
 - Abre Maxtrack GO, Zendesk e ChatGPT em abas do navegador.
 - Também pode abrir a pasta Downloads e o Bloco de Notas.
 - Salva as escolhas no perfil do Windows para não exigir nova marcação a cada uso.
+- O menu oferece um botão para abrir imediatamente e outro para configurar as escolhas.
+- Pode apenas iniciar o Chrome quando ele já estiver configurado para restaurar as abas anteriores, evitando links duplicados.
 - Não fecha o Chrome nem interfere nas abas que já estiverem abertas.
 
 ### Consolidador de Planilha Mãe

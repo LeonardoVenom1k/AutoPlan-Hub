@@ -7,6 +7,7 @@ from pathlib import Path
 from tkinter import messagebox, ttk
 
 from app_info import APP_AUTHOR, APP_NAME, APP_VERSION, apply_window_icon, center_window
+from automacoes.ambiente_trabalho.service import launch_environment, load_config
 
 APP_DIR = Path(__file__).resolve().parent
 
@@ -55,8 +56,12 @@ class AutoPlanHub(tk.Tk):
                  text='Abre os aplicativos, sites e pastas escolhidos e lembra suas preferências.',
                  bg='white', fg='#4B5563', font=('Segoe UI', 10),
                  wraplength=600, justify='left').grid(row=1, column=0, sticky='w', pady=(5, 12))
-        ttk.Button(work_card, text='Configurar e abrir', style='Hub.TButton',
-                   command=self.open_work_environment).grid(row=0, column=1, rowspan=2, padx=(25, 0))
+        work_actions = tk.Frame(work_card, bg='white')
+        work_actions.grid(row=0, column=1, rowspan=2, padx=(25, 0))
+        ttk.Button(work_actions, text='Abrir', style='Hub.TButton',
+                   command=self.launch_work_environment).pack(side='left')
+        ttk.Button(work_actions, text='Configurar', style='Secondary.TButton',
+                   command=self.open_work_environment).pack(side='left', padx=(8, 0))
         work_card.columnconfigure(0, weight=1)
 
         card = tk.Frame(content, bg='white', highlightbackground='#C9D5E3',
@@ -104,6 +109,19 @@ class AutoPlanHub(tk.Tk):
                              cwd=str(APP_DIR))
         except Exception as exc:
             messagebox.showerror('Não foi possível abrir', f'Falha ao abrir o ambiente de trabalho:\n{exc}')
+
+    def launch_work_environment(self):
+        try:
+            successes, failures = launch_environment(load_config())
+        except Exception as exc:
+            messagebox.showerror('Não foi possível abrir', f'Falha ao abrir o ambiente de trabalho:\n{exc}')
+            return
+        if failures:
+            messagebox.showwarning(
+                'Ambiente aberto com avisos',
+                'Itens abertos:\n- ' + ('\n- '.join(successes) if successes else 'Nenhum') +
+                '\n\nNão foi possível abrir:\n- ' + '\n- '.join(failures),
+            )
 
     def open_consolidator(self):
         module = APP_DIR / 'automacoes' / 'planilha_mae' / 'ui.py'
