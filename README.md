@@ -6,7 +6,7 @@ Central local de automações para rotinas operacionais.
 
 **Repositório oficial:** [github.com/LeonardoVenom1k/AutoPlan-Hub](https://github.com/LeonardoVenom1k/AutoPlan-Hub)
 
-**Versão:** 0.6.2
+**Versão:** 0.6.3
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automações disponíveis
@@ -27,6 +27,7 @@ Central local de automações para rotinas operacionais.
 - **Auditoria de localização:** destinado à conferência de alterações de localização em atendimentos já finalizados.
 - **Limpeza de planilhas diárias:** destinado à preparação de planilhas de Logística, Raízen e SPTrans.
 - Os dois módulos aparecem no menu como `Em desenvolvimento` e permanecem bloqueados até a implementação.
+- O menu possui rolagem própria para manter o rodapé e o botão Fechar visíveis em telas menores, sem exigir maximização.
 
 ### Consolidador de Planilha Mãe
 

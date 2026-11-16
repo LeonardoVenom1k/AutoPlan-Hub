@@ -23,7 +23,7 @@ class AutoPlanHub(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('AutoPlan Hub')
-        self.minsize(820, 680)
+        self.minsize(820, 600)
         self.configure(bg='#EEF3F8')
         apply_window_icon(self)
 
@@ -42,8 +42,30 @@ class AutoPlanHub(tk.Tk):
         tk.Label(header, text='Central de automações para rotinas operacionais',
                  bg='#17365D', fg='#D9EAF7', font=('Segoe UI', 11)).pack(anchor='w', pady=(3, 0))
 
-        content = tk.Frame(self, bg='#EEF3F8', padx=30, pady=25)
-        content.pack(fill='both', expand=True)
+        content_area = tk.Frame(self, bg='#EEF3F8')
+        content_area.pack(fill='both', expand=True)
+        canvas = tk.Canvas(content_area, bg='#EEF3F8', highlightthickness=0)
+        scrollbar = ttk.Scrollbar(content_area, orient='vertical', command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side='right', fill='y')
+        canvas.pack(side='left', fill='both', expand=True)
+
+        content = tk.Frame(canvas, bg='#EEF3F8', padx=30, pady=18)
+        content_window = canvas.create_window((0, 0), window=content, anchor='nw')
+        content.bind(
+            '<Configure>',
+            lambda _event: canvas.configure(scrollregion=canvas.bbox('all')),
+        )
+        canvas.bind(
+            '<Configure>',
+            lambda event: canvas.itemconfigure(content_window, width=event.width),
+        )
+
+        def scroll_menu(event):
+            canvas.yview_scroll(int(-event.delta / 120), 'units')
+
+        canvas.bind('<Enter>', lambda _event: canvas.bind_all('<MouseWheel>', scroll_menu))
+        canvas.bind('<Leave>', lambda _event: canvas.unbind_all('<MouseWheel>'))
         tk.Label(content, text='Automações disponíveis', bg='#EEF3F8', fg='#1F2937',
                  font=('Segoe UI', 16, 'bold')).pack(anchor='w', pady=(0, 14))
 
@@ -123,7 +145,7 @@ class AutoPlanHub(tk.Tk):
                  font=('Segoe UI', 9)).pack(side='left')
         ttk.Button(footer, text='Fechar', style='Secondary.TButton',
                    command=self.destroy).pack(side='right')
-        center_window(self, 920, 760)
+        center_window(self, 920, 700)
 
     def open_work_environment(self):
         module = APP_DIR / 'automacoes' / 'ambiente_trabalho' / 'ui.py'
