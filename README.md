@@ -4,10 +4,21 @@
 
 Central local de automações para rotinas operacionais.
 
-**Versão:** 0.5.1
+**Repositório oficial:** [github.com/LeonardoVenom1k/AutoPlan-Hub](https://github.com/LeonardoVenom1k/AutoPlan-Hub)
+
+**Versão:** 0.6.0
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automações disponíveis
+
+### Ambiente de trabalho
+
+- É a primeira opção exibida no menu principal.
+- Abre WhatsApp, Outlook e Teams no aplicativo Desktop ou no Chrome.
+- Abre Maxtrack GO, Zendesk e ChatGPT em abas do navegador.
+- Também pode abrir a pasta Downloads e o Bloco de Notas.
+- Salva as escolhas no perfil do Windows para não exigir nova marcação a cada uso.
+- Não fecha o Chrome nem interfere nas abas que já estiverem abertas.
 
 ### Consolidador de Planilha Mãe
 
@@ -78,6 +89,9 @@ Também é possível abrir pelo arquivo `Abrir AutoPlan Hub.bat`.
 
 ```text
 automacoes/
+├── ambiente_trabalho/
+│   ├── service.py  # preferências persistentes e abertura das ferramentas
+│   └── ui.py       # seleção entre Desktop, Web, sites, pasta e Bloco de Notas
 ├── planilha_mae/
 │   ├── engine.py   # regras de leitura, comparação e geração do Excel
 │   ├── service.py  # criação, atualização, backup e relatório
@@ -92,4 +106,5 @@ automacoes/
 ## Privacidade
 
 Planilhas, relatórios, backups e arquivos com dados operacionais são ignorados pelo Git. Não inclua dados reais no repositório.
+O código-fonte pode ser público, mas credenciais, dados pessoais e informações internas não podem ser publicados.
 

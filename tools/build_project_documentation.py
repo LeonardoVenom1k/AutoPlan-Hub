@@ -72,6 +72,12 @@ def repeat_table_header(row):
     tr_pr.append(tbl_header)
 
 
+def prevent_row_split(row):
+    tr_pr = row._tr.get_or_add_trPr()
+    cant_split = OxmlElement('w:cantSplit')
+    tr_pr.append(cant_split)
+
+
 def add_page_number(paragraph):
     paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     run = paragraph.add_run('Página ')
@@ -95,6 +101,7 @@ def style_table(table, widths=None, header=True):
     if header:
         repeat_table_header(table.rows[0])
     for r_idx, row in enumerate(table.rows):
+        prevent_row_split(row)
         if r_idx == 0 and header:
             for cell in row.cells:
                 set_cell_fill(cell, NAVY)
@@ -161,24 +168,27 @@ def configure_document(doc):
     section.different_first_page_header_footer = True
     section.page_width = Cm(21)
     section.page_height = Cm(29.7)
-    section.top_margin = Cm(2.1)
-    section.bottom_margin = Cm(1.8)
-    section.left_margin = Cm(2.2)
-    section.right_margin = Cm(2.2)
+    # Apresentação inspirada na ABNT NBR 14724: A4, 3 cm à esquerda e
+    # no topo, 2 cm à direita e na base.
+    section.top_margin = Cm(3)
+    section.bottom_margin = Cm(2)
+    section.left_margin = Cm(3)
+    section.right_margin = Cm(2)
 
     normal = doc.styles['Normal']
-    normal.font.name = 'Aptos'
-    normal._element.rPr.rFonts.set(qn('w:ascii'), 'Aptos')
-    normal._element.rPr.rFonts.set(qn('w:hAnsi'), 'Aptos')
-    normal.font.size = Pt(10.5)
+    normal.font.name = 'Arial'
+    normal._element.rPr.rFonts.set(qn('w:ascii'), 'Arial')
+    normal._element.rPr.rFonts.set(qn('w:hAnsi'), 'Arial')
+    normal.font.size = Pt(12)
     normal.font.color.rgb = RGBColor.from_string(TEXT)
     normal.paragraph_format.space_after = Pt(6)
-    normal.paragraph_format.line_spacing = 1.12
+    normal.paragraph_format.line_spacing = 1.5
+    normal.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
     title = doc.styles['Title']
-    title.font.name = 'Aptos Display'
-    title._element.rPr.rFonts.set(qn('w:ascii'), 'Aptos Display')
-    title._element.rPr.rFonts.set(qn('w:hAnsi'), 'Aptos Display')
+    title.font.name = 'Arial'
+    title._element.rPr.rFonts.set(qn('w:ascii'), 'Arial')
+    title._element.rPr.rFonts.set(qn('w:hAnsi'), 'Arial')
     title.font.size = Pt(30)
     title.font.bold = True
     title.font.color.rgb = RGBColor(0, 0, 0)
@@ -189,21 +199,31 @@ def configure_document(doc):
 
     for name, size in [('Heading 1', 18), ('Heading 2', 13), ('Heading 3', 11)]:
         style = doc.styles[name]
-        style.font.name = 'Aptos Display'
-        style._element.rPr.rFonts.set(qn('w:ascii'), 'Aptos Display')
-        style._element.rPr.rFonts.set(qn('w:hAnsi'), 'Aptos Display')
+        style.font.name = 'Arial'
+        style._element.rPr.rFonts.set(qn('w:ascii'), 'Arial')
+        style._element.rPr.rFonts.set(qn('w:hAnsi'), 'Arial')
         style.font.size = Pt(size)
         style.font.bold = True
         style.font.color.rgb = RGBColor(0, 0, 0)
         style.paragraph_format.space_before = Pt(14 if name == 'Heading 1' else 9)
         style.paragraph_format.space_after = Pt(6)
 
+    for name in ('TOC 1', 'TOC 2', 'TOC 3'):
+        if name in doc.styles:
+            style = doc.styles[name]
+            style.font.name = 'Arial'
+            style._element.rPr.rFonts.set(qn('w:ascii'), 'Arial')
+            style._element.rPr.rFonts.set(qn('w:hAnsi'), 'Arial')
+            style.font.size = Pt(10)
+            style.paragraph_format.line_spacing = 1.0
+            style.paragraph_format.space_after = Pt(2)
+
     header = section.header
     hp = header.paragraphs[0]
     hp.text = 'AUTOPLAN HUB   |   DOCUMENTAÇÃO DO PROJETO'
     hp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     for run in hp.runs:
-        run.font.name = 'Aptos'
+        run.font.name = 'Arial'
         run.font.size = Pt(8)
         run.font.bold = True
         run.font.color.rgb = RGBColor.from_string(NAVY)
@@ -214,7 +234,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.5.1').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.6.0').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -256,10 +276,10 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.5.1'),
-        ('Versão do documento', '2.4'),
+        ('Versão do software', '0.6.0'),
+        ('Versão do documento', '3.0'),
         ('Responsável', 'Leonardo Aguiar'),
-        ('Data de emissão', '14 de novembro de 2026'),
+        ('Data de emissão', '16 de novembro de 2026'),
     ]
     for row, values in zip(cover.rows, cover_data):
         row.cells[0].text, row.cells[1].text = values
@@ -272,39 +292,62 @@ def build():
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Pt(20)
-    r = p.add_run('Uso interno e repositório privado')
+    r = p.add_run('Código público e dados operacionais protegidos')
     r.bold = True
     r.font.color.rgb = RGBColor.from_string(NAVY)
     doc.add_page_break()
 
-    add_heading(doc, 'Apresentação', 1)
-    add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório privado.')
-    add_body(doc, 'A versão 0.5.1 esclarece o fluxo de atualização gradual da Planilha Mãe. A interface passa a solicitar o relatório final mais recente, que pode ser baixado alguns dias depois para comparar e atualizar resultados e horários já importados.')
+    # Folha de rosto
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(25)
+    r = p.add_run('LEONARDO AGUIAR')
+    r.bold = True
+    r.font.size = Pt(12)
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(80)
+    r = p.add_run('AUTOPLAN HUB')
+    r.bold = True
+    r.font.size = Pt(18)
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run('Manual técnico operacional e de conformidade')
+    p = doc.add_paragraph()
+    p.paragraph_format.left_indent = Cm(7)
+    p.paragraph_format.space_before = Pt(70)
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p.add_run('Documentação destinada à operação, manutenção, controle de versões e uso responsável do AutoPlan Hub em ambiente corporativo.')
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(110)
+    p.add_run('BRASIL\n2026')
+    doc.add_page_break()
 
-    add_heading(doc, 'Conteúdo do documento', 2)
-    contents = [
-        ('1', 'Visão geral do produto'), ('2', 'Arquitetura e organização do código'),
-        ('3', 'Instalação e execução'), ('4', 'Consolidador de Planilha Mãe'),
-        ('5', 'Gerador de Planilha Rank'), ('6', 'Regras de dados e inconformidades'),
-        ('7', 'Segurança privacidade e recuperação'), ('8', 'Testes e controle de qualidade'),
-        ('9', 'Versionamento Git e publicação'), ('10', 'Manutenção e evolução'),
-        ('11', 'Histórico de versões'),
-    ]
-    table = doc.add_table(rows=1, cols=2)
-    table.rows[0].cells[0].text = 'Seção'
-    table.rows[0].cells[1].text = 'Assunto'
-    for number, subject in contents:
-        cells = table.add_row().cells
-        cells[0].text, cells[1].text = number, subject
-    style_table(table, [Cm(2), Cm(13.5)])
+    add_heading(doc, 'Apresentação', 1)
+    add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório público.')
+    add_body(doc, 'Repositório oficial: https://github.com/LeonardoVenom1k/AutoPlan-Hub')
+    add_body(doc, 'A versão 0.6.0 adiciona um iniciador do ambiente de trabalho. O usuário escolhe se WhatsApp, Outlook e Teams serão abertos no aplicativo Desktop ou no Chrome, seleciona os demais atalhos e mantém essas preferências salvas no próprio computador.')
+
+    doc.add_page_break()
+    p = doc.add_paragraph()
+    p.paragraph_format.space_after = Pt(12)
+    r = p.add_run('Sumário')
+    r.bold = True
+    r.font.name = 'Arial'
+    r.font.size = Pt(18)
+    toc = doc.add_paragraph()
+    add_field(toc, 'TOC \\o "1-3" \\h \\z \\u')
 
     doc.add_page_break()
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.5.1', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.6.0', 2)
     add_bullets(doc, [
-        'Menu principal com acesso às automações disponíveis.',
+        'Menu principal com o Ambiente de Trabalho como primeira opção e as automações de planilhas logo abaixo.',
+        'Preferências persistentes para abrir WhatsApp, Outlook e Teams no Desktop ou no Chrome.',
+        'Abertura opcional de Maxtrack GO, Zendesk, ChatGPT, Downloads e Bloco de Notas.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
         'Consolidador de Planilha Mãe com modos de criação e atualização.',
         'Leitura de planilhas diárias e do relatório final mensal.',
@@ -324,7 +367,7 @@ def build():
         'Apresentação do Rank com painel de veículos ordenado, No Show destacado e inconformidades em faixas azuis.',
     ])
     add_heading(doc, '1.3 Público e ambiente de uso', 2)
-    add_body(doc, 'O software foi projetado para uso local em Windows, com Microsoft Excel instalado. O repositório deve permanecer privado enquanto contiver regras operacionais específicas. Arquivos com dados reais não devem ser versionados.')
+    add_body(doc, 'O software foi projetado para uso local em Windows, com Microsoft Excel instalado. O código-fonte é mantido em repositório público, mas arquivos com dados reais, credenciais, relatórios e informações internas não devem ser versionados.')
 
     add_heading(doc, '2 Arquitetura e organização do código', 1)
     add_body(doc, 'A solução separa interface, orquestração e regras de Excel. Essa divisão permite alterar o visual sem interferir no processamento e modificar regras de consolidação sem reescrever o menu.')
@@ -338,6 +381,8 @@ def build():
         ('automacoes/planilha_rank/ui.py', 'Tela do Gerador de Rank, seleção da origem, período e progresso.'),
         ('automacoes/planilha_rank/service.py', 'Validação, destino e relatório da geração do Rank.'),
         ('automacoes/planilha_rank/engine.py', 'Bases, classificações, planilhas formatadas e quatro Tabelas Dinâmicas.'),
+        ('automacoes/ambiente_trabalho/ui.py', 'Tela para escolher aplicativos, sites, pasta e modo Desktop ou Web.'),
+        ('automacoes/ambiente_trabalho/service.py', 'Grava preferências no perfil do Windows e abre os itens selecionados.'),
         ('assets/', 'Ícones PNG e ICO do AutoPlan Hub.'),
         ('requirements.txt', 'Dependências necessárias para executar o projeto.'),
         ('.gitignore', 'Bloqueio de planilhas, backups, relatórios e arquivos temporários no Git.'),
@@ -378,6 +423,15 @@ def build():
     r.font.name = 'Consolas'; r.font.size = Pt(9.5)
     add_heading(doc, '3.3 Inicialização', 2)
     add_body(doc, 'O usuário pode abrir o arquivo Abrir AutoPlan Hub.bat ou executar python main.py. O menu permanece aberto quando uma automação é iniciada. O botão Voltar ao menu fecha somente o módulo atual.')
+
+    add_heading(doc, '3.4 Ambiente de trabalho', 2)
+    add_numbered(doc, [
+        'Abrir a primeira opção do menu principal.',
+        'Marcar WhatsApp, Outlook e Teams e escolher Desktop ou Web no Chrome.',
+        'Marcar os demais sites, a pasta Downloads e o Bloco de Notas conforme a rotina.',
+        'Usar Salvar preferências para registrar a seleção ou Salvar e abrir agora para registrar e iniciar os itens.',
+    ])
+    add_body(doc, 'As preferências são gravadas em uma pasta de configuração do usuário do Windows. O iniciador não encerra o Chrome e não remove abas abertas. Quando um aplicativo Desktop não estiver instalado ou registrado no Windows, a tela informa a falha sem impedir a abertura dos demais itens.')
 
     add_heading(doc, '4 Consolidador de Planilha Mãe', 1)
     add_heading(doc, '4.1 Modo Criar', 2)
@@ -471,6 +525,16 @@ def build():
         'Renomear ou copiar o backup para o nome oficial somente após confirmar o conteúdo.',
     ])
 
+    add_heading(doc, '7.4 Proteção de dados pessoais e LGPD', 2)
+    add_body(doc, 'As planilhas podem conter nomes, identificadores profissionais, horários, clientes e registros de atendimento associados a pessoas naturais. A organização responsável deve definir sua posição como controladora ou operadora, a finalidade e a base legal de cada tratamento, limitar o acesso, estabelecer prazo de retenção e atender os direitos dos titulares. O programa executa processamento local e não elimina essas obrigações.')
+    add_body(doc, 'Em conformidade com os princípios de finalidade, necessidade, segurança, prevenção e responsabilização previstos na Lei nº 13.709 de 2018, recomenda-se usar somente os dados necessários, manter o repositório sem planilhas reais, restringir permissões das pastas, conservar backups pelo tempo estritamente necessário e registrar incidentes e correções.')
+    add_heading(doc, '7.5 Segurança da informação e incidentes', 2)
+    add_body(doc, 'A Lei Geral de Proteção de Dados exige medidas técnicas e administrativas aptas a proteger dados pessoais. A Resolução CD ANPD nº 2 de 2022 e o guia de segurança da ANPD reforçam controles proporcionais ao risco. Para este projeto, isso inclui atualização do Windows e do Excel, contas individuais, bloqueio de tela, antivírus, cópias de segurança protegidas, revisão dos arquivos de saída e comunicação interna imediata em caso de acesso indevido, perda, envio incorreto ou alteração não autorizada.')
+    add_heading(doc, '7.6 Propriedade intelectual e licenças', 2)
+    add_body(doc, 'O código-fonte é protegido conforme a Lei nº 9.609 de 1998, sem prejuízo da legislação de direitos autorais. A publicação, distribuição ou licenciamento deve respeitar a titularidade definida pelo autor e pela organização. Bibliotecas, ícone, som e demais componentes de terceiros devem manter suas licenças, créditos e condições de uso. A publicidade do código não autoriza o compartilhamento de dados operacionais, dados pessoais ou credenciais.')
+    add_heading(doc, '7.7 Limites e responsabilidade de uso', 2)
+    add_body(doc, 'O AutoPlan Hub auxilia a consolidação e a análise, mas não substitui a revisão humana nem constitui decisão automatizada final. Toda planilha deve ser conferida antes da entrega. Links externos são abertos nos serviços escolhidos pelo usuário e continuam sujeitos às políticas, autenticação e disponibilidade de cada fornecedor. Esta documentação é operacional e não substitui avaliação jurídica da organização.')
+
     add_heading(doc, '8 Testes e controle de qualidade', 1)
     tests = [
         ('Sintaxe Python', 'Compilação dos módulos sem erros.'),
@@ -499,7 +563,7 @@ def build():
 
     add_heading(doc, '9 Versionamento Git e publicação', 1)
     add_heading(doc, '9.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.5.1, que esclarece o uso do relatório final mais recente nas atualizações graduais.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.6.0, que adiciona o iniciador configurável do ambiente de trabalho.')
     add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -530,8 +594,8 @@ def build():
     for commit,description in history:
         cells=table.add_row().cells; cells[0].text=commit; cells[1].text=description
     style_table(table,[Cm(3.4),Cm(12.1)])
-    add_heading(doc, '9.4 Publicação privada', 2)
-    add_body(doc, 'Antes do primeiro envio ao GitHub, o repositório deve ser criado como privado. O comando git status deve ser revisado para confirmar que não existem planilhas, relatórios, backups ou arquivos temporários preparados para commit.')
+    add_heading(doc, '9.4 Publicação no GitHub', 2)
+    add_body(doc, 'O repositório oficial público está disponível em https://github.com/LeonardoVenom1k/AutoPlan-Hub. Antes de cada envio, o comando git status deve ser revisado para confirmar que não existem planilhas, relatórios, backups, credenciais, dados pessoais ou arquivos temporários preparados para commit.')
 
     add_heading(doc, '10 Manutenção e evolução', 1)
     add_heading(doc, '10.1 Onde alterar cada tipo de comportamento', 2)
@@ -566,7 +630,6 @@ def build():
         'Novos módulos no menu do AutoPlan Hub.',
     ])
 
-    doc.add_page_break()
     add_heading(doc, '11 Histórico de versões', 1)
     versions = doc.add_table(rows=1, cols=5)
     for i, value in enumerate(['Software', 'Documento', 'Data', 'Responsável', 'Resumo']):
@@ -587,12 +650,33 @@ def build():
         ['0.4.2','2.2','14/11/2026','Leonardo Aguiar','Associação de técnicos aprimorada e prestadores vazios preenchidos pelo técnico.'],
         ['0.5.0','2.3','14/11/2026','Leonardo Aguiar','Som de notificação reproduzido ao concluir as automações.'],
         ['0.5.1','2.4','14/11/2026','Leonardo Aguiar','Entrada renomeada para relatório final mais recente usado na comparação.'],
+        ['0.6.0','3.0','16/11/2026','Leonardo Aguiar','Ambiente de trabalho configurável, preferências persistentes e documentação formal com referências legais.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value
     style_table(versions,[Cm(1.8),Cm(2.4),Cm(2.4),Cm(3.6),Cm(5.3)])
     add_heading(doc, '11.1 Regra de atualização deste documento', 2)
     add_body(doc, 'Toda versão funcional que alterar o comportamento, a interface, a arquitetura, as dependências ou as regras de dados deve gerar uma nova linha no histórico. Correções apenas textuais podem incrementar somente a versão do documento.')
+
+    doc.add_page_break()
+    add_heading(doc, '12 Referências', 1)
+    references = [
+        'ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 14724: informação e documentação, trabalhos acadêmicos, apresentação. Rio de Janeiro: ABNT.',
+        'ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 6023: informação e documentação, referências, elaboração. Rio de Janeiro: ABNT.',
+        'ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 6024: informação e documentação, numeração progressiva das seções de um documento. Rio de Janeiro: ABNT.',
+        'ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 6027: informação e documentação, sumário, apresentação. Rio de Janeiro: ABNT.',
+        'BRASIL. Lei nº 9.609, de 19 de fevereiro de 1998. Dispõe sobre a proteção da propriedade intelectual de programa de computador. Disponível em: https://www.planalto.gov.br/ccivil_03/leis/l9609.htm. Acesso em: 16 nov. 2026.',
+        'BRASIL. Lei nº 9.610, de 19 de fevereiro de 1998. Altera, atualiza e consolida a legislação sobre direitos autorais. Disponível em: https://www.planalto.gov.br/ccivil_03/leis/l9610.htm. Acesso em: 16 nov. 2026.',
+        'BRASIL. Lei nº 12.965, de 23 de abril de 2014. Estabelece princípios, garantias, direitos e deveres para o uso da Internet no Brasil. Disponível em: https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm. Acesso em: 16 nov. 2026.',
+        'BRASIL. Lei nº 13.709, de 14 de agosto de 2018. Lei Geral de Proteção de Dados Pessoais. Disponível em: https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm. Acesso em: 16 nov. 2026.',
+        'AUTORIDADE NACIONAL DE PROTEÇÃO DE DADOS. Guia orientativo sobre segurança da informação para agentes de tratamento de pequeno porte. Brasília: ANPD, 2021. Disponível em: https://www.gov.br/anpd/pt-br/centrais-de-conteudo/materiais-educativos-e-publicacoes/processo-guia-orientativo-sobre-seguranca-da-informacao-para-agentes-de-tratamento-de-pequeno-porte.pdf. Acesso em: 16 nov. 2026.',
+        'AUTORIDADE NACIONAL DE PROTEÇÃO DE DADOS. Resolução CD ANPD nº 2, de 27 de janeiro de 2022. Disponível em: https://www.gov.br/anpd/pt-br/acesso-a-informacao/institucional/atos-normativos/regulamentacoes_anpd/resolucao-cd-anpd-no-2-de-27-de-janeiro-de-2022. Acesso em: 16 nov. 2026.',
+    ]
+    for reference in references:
+        p = doc.add_paragraph(reference)
+        p.paragraph_format.first_line_indent = Cm(0)
+        p.paragraph_format.line_spacing = 1.0
+        p.paragraph_format.space_after = Pt(12)
 
     doc.add_page_break()
     annex_heading = add_heading(doc, 'Anexo A Checklist de liberação', 1)
@@ -603,7 +687,7 @@ def build():
         'Módulos compilados sem erro.', 'Teste com dados fictícios concluído.',
         'Tabela Dinâmica e detalhamento validados no Excel.', 'Backup e restauração verificados.',
         'git status sem dados operacionais.', 'Commit convencional criado.',
-        'Repositório confirmado como privado antes do envio.',
+        'Repositório público revisado e sem dados operacionais, pessoais ou credenciais.',
     ]
     for item in checklist:
         p=doc.add_paragraph()
