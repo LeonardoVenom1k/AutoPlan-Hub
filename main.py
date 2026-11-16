@@ -22,7 +22,7 @@ class AutoPlanHub(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('AutoPlan Hub')
-        self.minsize(820, 560)
+        self.minsize(820, 680)
         self.configure(bg='#EEF3F8')
         apply_window_icon(self)
 
@@ -46,9 +46,22 @@ class AutoPlanHub(tk.Tk):
         tk.Label(content, text='Automações disponíveis', bg='#EEF3F8', fg='#1F2937',
                  font=('Segoe UI', 16, 'bold')).pack(anchor='w', pady=(0, 14))
 
+        work_card = tk.Frame(content, bg='white', highlightbackground='#C9D5E3',
+                             highlightthickness=1, padx=22, pady=18)
+        work_card.pack(fill='x', anchor='n')
+        tk.Label(work_card, text='Abrir ambiente de trabalho', bg='white', fg='#17365D',
+                 font=('Segoe UI', 15, 'bold')).grid(row=0, column=0, sticky='w')
+        tk.Label(work_card,
+                 text='Abre os aplicativos, sites e pastas escolhidos e lembra suas preferências.',
+                 bg='white', fg='#4B5563', font=('Segoe UI', 10),
+                 wraplength=600, justify='left').grid(row=1, column=0, sticky='w', pady=(5, 12))
+        ttk.Button(work_card, text='Configurar e abrir', style='Hub.TButton',
+                   command=self.open_work_environment).grid(row=0, column=1, rowspan=2, padx=(25, 0))
+        work_card.columnconfigure(0, weight=1)
+
         card = tk.Frame(content, bg='white', highlightbackground='#C9D5E3',
                         highlightthickness=1, padx=22, pady=20)
-        card.pack(fill='x', anchor='n')
+        card.pack(fill='x', anchor='n', pady=(14, 0))
         tk.Label(card, text='Consolidador de Planilha Mãe', bg='white', fg='#17365D',
                  font=('Segoe UI', 15, 'bold')).grid(row=0, column=0, sticky='w')
         tk.Label(card,
@@ -78,7 +91,19 @@ class AutoPlanHub(tk.Tk):
                  font=('Segoe UI', 9)).pack(side='left')
         ttk.Button(footer, text='Fechar', style='Secondary.TButton',
                    command=self.destroy).pack(side='right')
-        center_window(self, 920, 620)
+        center_window(self, 920, 760)
+
+    def open_work_environment(self):
+        module = APP_DIR / 'automacoes' / 'ambiente_trabalho' / 'ui.py'
+        if not module.is_file():
+            messagebox.showerror('Recurso não encontrado',
+                                 'O módulo do Ambiente de Trabalho não foi encontrado.')
+            return
+        try:
+            subprocess.Popen([str(python_gui_executable()), '-m', 'automacoes.ambiente_trabalho.ui'],
+                             cwd=str(APP_DIR))
+        except Exception as exc:
+            messagebox.showerror('Não foi possível abrir', f'Falha ao abrir o ambiente de trabalho:\n{exc}')
 
     def open_consolidator(self):
         module = APP_DIR / 'automacoes' / 'planilha_mae' / 'ui.py'
