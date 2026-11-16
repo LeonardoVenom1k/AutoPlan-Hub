@@ -58,9 +58,9 @@ class AutoPlanHub(tk.Tk):
                  wraplength=600, justify='left').grid(row=1, column=0, sticky='w', pady=(5, 12))
         work_actions = tk.Frame(work_card, bg='white')
         work_actions.grid(row=0, column=1, rowspan=2, padx=(25, 0))
-        ttk.Button(work_actions, text='Abrir', style='Hub.TButton',
+        ttk.Button(work_actions, text='Abrir', style='Hub.TButton', width=13,
                    command=self.launch_work_environment).pack(side='left')
-        ttk.Button(work_actions, text='Configurar', style='Secondary.TButton',
+        ttk.Button(work_actions, text='Configurar', style='Hub.TButton', width=13,
                    command=self.open_work_environment).pack(side='left', padx=(8, 0))
         work_card.columnconfigure(0, weight=1)
 
@@ -89,6 +89,33 @@ class AutoPlanHub(tk.Tk):
         ttk.Button(rank_card, text='Abrir automação', style='Hub.TButton',
                    command=self.open_rank).grid(row=0, column=1, rowspan=2, padx=(25, 0))
         rank_card.columnconfigure(0, weight=1)
+
+        planned = tk.Frame(content, bg='#EEF3F8')
+        planned.pack(fill='x', anchor='n', pady=(14, 0))
+        planned.columnconfigure(0, weight=1)
+        planned.columnconfigure(1, weight=1)
+
+        location_card = tk.Frame(planned, bg='#F8FAFC', highlightbackground='#C9D5E3',
+                                 highlightthickness=1, padx=18, pady=14)
+        location_card.grid(row=0, column=0, sticky='nsew', padx=(0, 7))
+        tk.Label(location_card, text='Auditoria de localização', bg='#F8FAFC', fg='#526273',
+                 font=('Segoe UI', 12, 'bold')).pack(anchor='w')
+        tk.Label(location_card,
+                 text='Auditar alterações de localização em atendimentos já finalizados.',
+                 bg='#F8FAFC', fg='#64748B', font=('Segoe UI', 9),
+                 wraplength=330, justify='left').pack(anchor='w', pady=(4, 10))
+        ttk.Button(location_card, text='Em desenvolvimento', state='disabled').pack(anchor='w')
+
+        cleanup_card = tk.Frame(planned, bg='#F8FAFC', highlightbackground='#C9D5E3',
+                                highlightthickness=1, padx=18, pady=14)
+        cleanup_card.grid(row=0, column=1, sticky='nsew', padx=(7, 0))
+        tk.Label(cleanup_card, text='Limpeza de planilhas diárias', bg='#F8FAFC', fg='#526273',
+                 font=('Segoe UI', 12, 'bold')).pack(anchor='w')
+        tk.Label(cleanup_card,
+                 text='Limpar e preparar planilhas de Logística, Raízen ou SPTrans.',
+                 bg='#F8FAFC', fg='#64748B', font=('Segoe UI', 9),
+                 wraplength=330, justify='left').pack(anchor='w', pady=(4, 10))
+        ttk.Button(cleanup_card, text='Em desenvolvimento', state='disabled').pack(anchor='w')
 
         footer = tk.Frame(self, bg='#E3EAF2', padx=20, pady=9)
         footer.pack(fill='x', side='bottom')

@@ -3,7 +3,7 @@ from pathlib import Path
 import tkinter as tk
 
 APP_NAME = 'AutoPlan Hub'
-APP_VERSION = '0.6.1'
+APP_VERSION = '0.6.2'
 APP_AUTHOR = 'Leonardo Aguiar'
 REVIEW_NOTICE = (
     'Revise cuidadosamente a planilha gerada ou atualizada antes de entregar, '
