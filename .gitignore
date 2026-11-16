@@ -21,4 +21,5 @@ testes_reais/
 ~$*
 *.tmp
 *.log
+*.previous
 

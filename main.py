@@ -2,12 +2,14 @@
 """Menu principal do AutoPlan Hub."""
 import subprocess
 import sys
+import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
 
 from app_info import APP_AUTHOR, APP_NAME, APP_VERSION, apply_window_icon, center_window
 from automacoes.ambiente_trabalho.service import launch_environment, load_config
+from atualizacao.service import fetch_release, is_newer, prepare_update
 
 APP_DIR = Path(__file__).resolve().parent
 
@@ -145,17 +147,88 @@ class AutoPlanHub(tk.Tk):
                  font=('Segoe UI', 9)).pack(side='left')
         ttk.Button(footer, text='Fechar', style='Secondary.TButton',
                    command=self.destroy).pack(side='right')
+        self.update_button = tk.Button(
+            footer, text='Verificar atualização', font=('Segoe UI', 8, 'bold'),
+            bg='#D7E0EA', fg='#334155', activebackground='#C9D5E3',
+            relief='flat', padx=10, pady=5, cursor='hand2',
+            command=self.check_for_update,
+        )
+        self.update_button.pack(side='right', padx=(0, 10))
+        self.available_release = None
         center_window(self, 920, 700)
+
+    def check_for_update(self):
+        self.update_button.configure(
+            text='Verificando...', state='disabled', bg='#D7E0EA', fg='#526273', cursor='arrow')
+        threading.Thread(target=self._check_update_worker, daemon=True).start()
+
+    def _check_update_worker(self):
+        try:
+            release = fetch_release()
+            self.after(0, self._show_update_result, release, None)
+        except Exception as exc:
+            self.after(0, self._show_update_result, None, exc)
+
+    def _show_update_result(self, release, error):
+        if error:
+            self.update_button.configure(
+                text='Falha ao verificar', state='normal', bg='#B7791F', fg='white',
+                activebackground='#975A16', cursor='hand2', command=self.check_for_update)
+            messagebox.showwarning('Atualização', f'Não foi possível verificar novas versões:\n{error}')
+            return
+        if is_newer(release):
+            self.available_release = release
+            self.update_button.configure(
+                text=f'Baixar v{release.version}', state='normal', bg='#C62828', fg='white',
+                activebackground='#A61B1B', cursor='hand2', command=self.download_update)
+            return
+        self.available_release = None
+        self.update_button.configure(
+            text=f'Versão {APP_VERSION} atual', state='disabled', bg='#2E7D32', fg='white',
+            disabledforeground='white', cursor='arrow')
+
+    def download_update(self):
+        release = self.available_release
+        if release is None:
+            return
+        if not messagebox.askyesno(
+            'Atualizar AutoPlan Hub',
+            f'Baixar e instalar o AutoPlan Hub {release.version}?\n\n'
+            'O programa será fechado, o executável antigo será removido e a nova versão será aberta.',
+        ):
+            return
+        self.update_button.configure(
+            text='Baixando...', state='disabled', bg='#C62828', fg='white', cursor='arrow')
+        threading.Thread(target=self._download_update_worker, args=(release,), daemon=True).start()
+
+    def _download_update_worker(self, release):
+        try:
+            target = prepare_update(release)
+            self.after(0, self._finish_update, target, None)
+        except Exception as exc:
+            self.after(0, self._finish_update, None, exc)
+
+    def _finish_update(self, target, error):
+        if error:
+            self.update_button.configure(
+                text=f'Baixar v{self.available_release.version}', state='normal',
+                bg='#C62828', fg='white', cursor='hand2', command=self.download_update)
+            messagebox.showerror('Falha na atualização', str(error))
+            return
+        messagebox.showinfo(
+            'Atualização preparada',
+            f'A nova versão será instalada em:\n{target}\n\nO AutoPlan Hub será reiniciado.',
+        )
+        self.destroy()
 
     def open_work_environment(self):
         module = APP_DIR / 'automacoes' / 'ambiente_trabalho' / 'ui.py'
-        if not module.is_file():
+        if not getattr(sys, 'frozen', False) and not module.is_file():
             messagebox.showerror('Recurso não encontrado',
                                  'O módulo do Ambiente de Trabalho não foi encontrado.')
             return
         try:
-            subprocess.Popen([str(python_gui_executable()), '-m', 'automacoes.ambiente_trabalho.ui'],
-                             cwd=str(APP_DIR))
+            self._launch_module('automacoes.ambiente_trabalho.ui', '--ambiente-trabalho')
         except Exception as exc:
             messagebox.showerror('Não foi possível abrir', f'Falha ao abrir o ambiente de trabalho:\n{exc}')
 
@@ -174,28 +247,50 @@ class AutoPlanHub(tk.Tk):
 
     def open_consolidator(self):
         module = APP_DIR / 'automacoes' / 'planilha_mae' / 'ui.py'
-        if not module.is_file():
+        if not getattr(sys, 'frozen', False) and not module.is_file():
             messagebox.showerror('Automação não encontrada',
                                  'O módulo do Consolidador de Planilha Mãe não foi encontrado.')
             return
         try:
-            subprocess.Popen([str(python_gui_executable()), '-m', 'automacoes.planilha_mae.ui'], cwd=str(APP_DIR))
+            self._launch_module('automacoes.planilha_mae.ui', '--planilha-mae')
         except Exception as exc:
             messagebox.showerror('Não foi possível abrir', f'Falha ao abrir a automação:\n{exc}')
 
     def open_rank(self):
         module = APP_DIR / 'automacoes' / 'planilha_rank' / 'ui.py'
-        if not module.is_file():
+        if not getattr(sys, 'frozen', False) and not module.is_file():
             messagebox.showerror('Automação não encontrada',
                                  'O módulo do Gerador de Planilha Rank não foi encontrado.')
             return
         try:
-            subprocess.Popen([str(python_gui_executable()), '-m', 'automacoes.planilha_rank.ui'],
-                             cwd=str(APP_DIR))
+            self._launch_module('automacoes.planilha_rank.ui', '--planilha-rank')
         except Exception as exc:
             messagebox.showerror('Não foi possível abrir', f'Falha ao abrir a automação:\n{exc}')
 
+    @staticmethod
+    def _launch_module(module, frozen_argument):
+        if getattr(sys, 'frozen', False):
+            command = [sys.executable, frozen_argument]
+        else:
+            command = [str(python_gui_executable()), '-m', module]
+        subprocess.Popen(command, cwd=str(APP_DIR))
+
+
+def run():
+    argument = sys.argv[1] if len(sys.argv) > 1 else ''
+    if argument == '--ambiente-trabalho':
+        from automacoes.ambiente_trabalho.ui import WorkEnvironmentWindow
+        WorkEnvironmentWindow().mainloop()
+    elif argument == '--planilha-mae':
+        from automacoes.planilha_mae.ui import ConsolidatorWindow
+        ConsolidatorWindow().mainloop()
+    elif argument == '--planilha-rank':
+        from automacoes.planilha_rank.ui import RankWindow
+        RankWindow().mainloop()
+    else:
+        AutoPlanHub().mainloop()
+
 
 if __name__ == '__main__':
-    AutoPlanHub().mainloop()
+    run()
 

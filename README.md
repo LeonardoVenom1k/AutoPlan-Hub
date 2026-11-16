@@ -6,7 +6,7 @@ Central local de automações para rotinas operacionais.
 
 **Repositório oficial:** [github.com/LeonardoVenom1k/AutoPlan-Hub](https://github.com/LeonardoVenom1k/AutoPlan-Hub)
 
-**Versão:** 0.6.3
+**Versão:** 0.7.0
 **Desenvolvido por:** Leonardo Aguiar
 
 ## Automações disponíveis
@@ -94,6 +94,17 @@ python main.py
 
 Também é possível abrir pelo arquivo `Abrir AutoPlan Hub.bat`.
 
+## Executável e atualizações
+
+- O executável pronto para Windows fica na pasta [`executavel`](executavel/).
+- O número da versão faz parte do nome, por exemplo `AutoPlan-Hub-v0.7.0.exe`.
+- O botão pequeno no rodapé consulta o `manifest.json` publicado no GitHub.
+- Verde significa que a versão instalada é a mais recente e o botão permanece bloqueado.
+- Vermelho significa que existe uma versão mais recente e o botão permite baixá-la.
+- Antes da troca, o arquivo baixado é validado pela assinatura SHA-256.
+- Após a confirmação, o programa fecha, remove o executável antigo, instala o novo e reinicia.
+- Para gerar uma nova distribuição, execute `tools/build_executable.ps1` depois de atualizar `APP_VERSION`.
+
 ## Organização
 
 ```text
@@ -110,6 +121,11 @@ automacoes/
     ├── engine.py   # bases, rankings, formatação e Tabelas Dinâmicas
     ├── service.py  # validação, destino e relatório de processamento
     └── ui.py       # tela independente do gerador de Rank
+atualizacao/
+└── service.py      # consulta, validação, download e substituição do executável
+executavel/
+├── manifest.json   # versão e assinatura usadas pelo atualizador
+└── AutoPlan-Hub-vX.Y.Z.exe
 ```
 
 ## Privacidade

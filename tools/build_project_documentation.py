@@ -234,7 +234,7 @@ def configure_document(doc):
     table.columns[0].width = Cm(12.5)
     table.columns[1].width = Cm(4.1)
     left = table.cell(0, 0).paragraphs[0]
-    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.6.3').font.size = Pt(8.5)
+    left.add_run('Leonardo Aguiar   |   AutoPlan Hub 0.7.0').font.size = Pt(8.5)
     left.runs[0].font.color.rgb = RGBColor.from_string(MUTED)
     add_page_number(table.cell(0, 1).paragraphs[0])
     set_table_borders(table, color='FFFFFF', size='0')
@@ -276,8 +276,8 @@ def build():
     doc.add_paragraph()
     cover = doc.add_table(rows=4, cols=2)
     cover_data = [
-        ('Versão do software', '0.6.3'),
-        ('Versão do documento', '3.3'),
+        ('Versão do software', '0.7.0'),
+        ('Versão do documento', '4.0'),
         ('Responsável', 'Leonardo Aguiar'),
         ('Data de emissão', '16 de novembro de 2026'),
     ]
@@ -327,7 +327,7 @@ def build():
     add_heading(doc, 'Apresentação', 1)
     add_body(doc, 'Este documento registra a finalidade, a arquitetura, as regras de funcionamento, os procedimentos de uso e o histórico de versões do AutoPlan Hub. Ele serve como referência para operação, manutenção, evolução e publicação controlada do projeto em um repositório público.')
     add_body(doc, 'Repositório oficial: https://github.com/LeonardoVenom1k/AutoPlan-Hub')
-    add_body(doc, 'A versão 0.6.3 corrige o corte da parte inferior do menu em telas menores. A área dos módulos passa a ter rolagem própria, enquanto o rodapé e o botão Fechar permanecem sempre visíveis sem exigir que a janela seja maximizada.')
+    add_body(doc, 'A versão 0.7.0 disponibiliza um executável único para Windows e um mecanismo controlado de atualização. Um botão no rodapé consulta o manifesto publicado no GitHub, informa se existe nova versão e permite baixar, validar e substituir o executável anterior.')
 
     doc.add_page_break()
     p = doc.add_paragraph()
@@ -343,7 +343,7 @@ def build():
     add_heading(doc, '1 Visão geral do produto', 1)
     add_heading(doc, '1.1 Objetivo', 2)
     add_body(doc, 'O AutoPlan Hub centraliza automações operacionais em uma única interface. Cada automação é isolada em seu próprio módulo, o que reduz o impacto de mudanças, facilita testes e permite acrescentar novas funções sem transformar o projeto em um único arquivo difícil de manter.')
-    add_heading(doc, '1.2 Escopo da versão 0.6.3', 2)
+    add_heading(doc, '1.2 Escopo da versão 0.7.0', 2)
     add_bullets(doc, [
         'Menu principal com o Ambiente de Trabalho como primeira opção e as automações de planilhas logo abaixo.',
         'Preferências persistentes para abrir WhatsApp, Outlook e Teams no Desktop ou no Chrome.',
@@ -352,6 +352,9 @@ def build():
         'Botões Abrir e Configurar com as mesmas dimensões e o mesmo padrão visual.',
         'Módulos planejados de Auditoria de localização e Limpeza de planilhas diárias exibidos de forma bloqueada.',
         'Menu rolável e altura inicial compatível com telas menores e com a barra de tarefas do Windows.',
+        'Executável único para Windows com a versão incorporada ao nome do arquivo.',
+        'Botão de atualização no rodapé com estados de verificação, versão atual e nova versão disponível.',
+        'Validação do endereço, nome e assinatura SHA-256 antes da substituição do executável.',
         'Abertura opcional de Maxtrack GO, Zendesk, ChatGPT, Downloads e Bloco de Notas.',
         'Identidade visual própria, ícone para Windows e informações de autor e versão.',
         'Consolidador de Planilha Mãe com modos de criação e atualização.',
@@ -388,6 +391,9 @@ def build():
         ('automacoes/planilha_rank/engine.py', 'Bases, classificações, planilhas formatadas e quatro Tabelas Dinâmicas.'),
         ('automacoes/ambiente_trabalho/ui.py', 'Tela para escolher aplicativos, sites, pasta e modo Desktop ou Web.'),
         ('automacoes/ambiente_trabalho/service.py', 'Grava preferências no perfil do Windows e abre os itens selecionados.'),
+        ('atualizacao/service.py', 'Consulta o manifesto, compara versões, valida o download e agenda a substituição segura.'),
+        ('executavel/', 'Executável publicado, manifesto de versão e instruções de distribuição.'),
+        ('tools/build_executable.ps1', 'Geração reproduzível do executável e do manifesto com SHA-256.'),
         ('assets/', 'Ícones PNG e ICO do AutoPlan Hub.'),
         ('requirements.txt', 'Dependências necessárias para executar o projeto.'),
         ('.gitignore', 'Bloqueio de planilhas, backups, relatórios e arquivos temporários no Git.'),
@@ -438,6 +444,17 @@ def build():
         'Marcar O Chrome já restaura minhas abas quando o navegador estiver configurado para recuperar a sessão anterior.',
     ])
     add_body(doc, 'No menu principal, Abrir executa diretamente a configuração salva e Configurar abre a tela de escolhas. As preferências são gravadas em uma pasta de configuração do usuário do Windows. O iniciador não encerra o Chrome e não remove abas abertas. Quando a restauração de sessão estiver marcada, o Chrome é iniciado sem receber novamente a lista de links. Quando um aplicativo Desktop não estiver instalado ou registrado no Windows, a tela informa a falha sem impedir a abertura dos demais itens.')
+
+    add_heading(doc, '3.5 Executável e atualização', 2)
+    add_body(doc, 'O arquivo distribuído segue o padrão AutoPlan-Hub-vMAJOR.MINOR.PATCH.exe. O botão Verificar atualização fica no rodapé, separado das automações. Ao consultar o manifesto público, o botão fica verde e bloqueado quando a versão instalada é a mais recente. Quando existe uma versão superior, fica vermelho e permite iniciar o download após confirmação do usuário.')
+    add_numbered(doc, [
+        'Consultar o arquivo executavel/manifest.json no repositório oficial.',
+        'Comparar a versão publicada com APP_VERSION usando os três componentes numéricos.',
+        'Validar se o endereço pertence aos domínios autorizados do GitHub e se o nome contém a mesma versão.',
+        'Baixar o novo executável ao lado da versão atual e calcular sua assinatura SHA-256.',
+        'Cancelar a atualização e apagar o download incompleto se a assinatura for diferente.',
+        'Após confirmação e download válido, fechar o programa, remover o executável anterior, instalar o novo e reiniciar.',
+    ])
 
     add_heading(doc, '4 Consolidador de Planilha Mãe', 1)
     add_heading(doc, '4.1 Modo Criar', 2)
@@ -536,6 +553,7 @@ def build():
     add_body(doc, 'Em conformidade com os princípios de finalidade, necessidade, segurança, prevenção e responsabilização previstos na Lei nº 13.709 de 2018, recomenda-se usar somente os dados necessários, manter o repositório sem planilhas reais, restringir permissões das pastas, conservar backups pelo tempo estritamente necessário e registrar incidentes e correções.')
     add_heading(doc, '7.5 Segurança da informação e incidentes', 2)
     add_body(doc, 'A Lei Geral de Proteção de Dados exige medidas técnicas e administrativas aptas a proteger dados pessoais. A Resolução CD ANPD nº 2 de 2022 e o guia de segurança da ANPD reforçam controles proporcionais ao risco. Para este projeto, isso inclui atualização do Windows e do Excel, contas individuais, bloqueio de tela, antivírus, cópias de segurança protegidas, revisão dos arquivos de saída e comunicação interna imediata em caso de acesso indevido, perda, envio incorreto ou alteração não autorizada.')
+    add_body(doc, 'O atualizador aceita somente HTTPS e endereços autorizados do GitHub. A assinatura SHA-256 publicada no manifesto deve ser igual à assinatura calculada após o download. A versão anterior só é removida depois que o novo arquivo estiver completo e validado; falhas preservam o executável atual.')
     add_heading(doc, '7.6 Propriedade intelectual e licenças', 2)
     add_body(doc, 'O código-fonte é protegido conforme a Lei nº 9.609 de 1998, sem prejuízo da legislação de direitos autorais. A publicação, distribuição ou licenciamento deve respeitar a titularidade definida pelo autor e pela organização. Bibliotecas, ícone, som e demais componentes de terceiros devem manter suas licenças, créditos e condições de uso. A publicidade do código não autoriza o compartilhamento de dados operacionais, dados pessoais ou credenciais.')
     add_heading(doc, '7.7 Limites e responsabilidade de uso', 2)
@@ -569,7 +587,7 @@ def build():
 
     add_heading(doc, '9 Versionamento Git e publicação', 1)
     add_heading(doc, '9.1 Modelo de versão', 2)
-    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.6.3, que corrige a exibição do menu em telas menores por meio de uma área rolável independente do rodapé.')
+    add_body(doc, 'O projeto usa versionamento semântico no formato MAJOR.MINOR.PATCH. MAJOR indica mudança incompatível, MINOR indica nova funcionalidade compatível e PATCH indica correção compatível. A versão atual é 0.7.0, que adiciona distribuição por executável e atualização controlada pelo manifesto publicado no GitHub.')
     add_heading(doc, '9.2 Convenção de commits', 2)
     commits = [
         ('feat:', 'Nova funcionalidade.'), ('fix:', 'Correção de defeito.'),
@@ -660,6 +678,7 @@ def build():
         ['0.6.1','3.1','16/11/2026','Leonardo Aguiar','Botões Abrir e Configurar separados e opção para respeitar a restauração de abas do Chrome.'],
         ['0.6.2','3.2','16/11/2026','Leonardo Aguiar','Botões do ambiente padronizados e módulos planejados exibidos de forma bloqueada no menu.'],
         ['0.6.3','3.3','16/11/2026','Leonardo Aguiar','Menu rolável para evitar corte da parte inferior e manter o rodapé visível sem maximização.'],
+        ['0.7.0','4.0','16/11/2026','Leonardo Aguiar','Executável único para Windows e atualização com manifesto público, confirmação e verificação SHA-256.'],
     ]:
         row=versions.add_row().cells
         for i,value in enumerate(values): row[i].text=value
