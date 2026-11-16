@@ -1,6 +1,7 @@
 """Atualização segura do executável publicado no GitHub."""
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
@@ -8,6 +9,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,9 +18,9 @@ from urllib.parse import urlparse
 from app_info import APP_VERSION
 
 
-MANIFEST_URL = (
-    'https://raw.githubusercontent.com/LeonardoVenom1k/AutoPlan-Hub/'
-    'main/executavel/manifest.json'
+MANIFEST_API_URL = (
+    'https://api.github.com/repos/LeonardoVenom1k/AutoPlan-Hub/'
+    'contents/executavel/manifest.json?ref=main'
 )
 ALLOWED_DOWNLOAD_HOSTS = {'raw.githubusercontent.com', 'github.com', 'objects.githubusercontent.com'}
 FILENAME_PATTERN = re.compile(r'^AutoPlan-Hub-v\d+\.\d+\.\d+\.exe$')
@@ -40,12 +42,20 @@ def version_tuple(version: str) -> tuple[int, int, int]:
 
 
 def fetch_release(timeout: int = 12) -> ReleaseInfo:
+    manifest_url = f'{MANIFEST_API_URL}&check={time.time_ns()}'
     request = urllib.request.Request(
-        MANIFEST_URL,
-        headers={'User-Agent': f'AutoPlan-Hub/{APP_VERSION}'},
+        manifest_url,
+        headers={
+            'User-Agent': f'AutoPlan-Hub/{APP_VERSION}',
+            'Accept': 'application/vnd.github+json',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+        },
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        payload = json.loads(response.read().decode('utf-8-sig'))
+        api_payload = json.loads(response.read().decode('utf-8-sig'))
+    encoded_content = str(api_payload['content']).replace('\n', '')
+    payload = json.loads(base64.b64decode(encoded_content).decode('utf-8-sig'))
     release = ReleaseInfo(
         version=str(payload['version']),
         filename=str(payload['filename']),
